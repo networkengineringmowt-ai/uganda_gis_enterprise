@@ -13,5 +13,64 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Mobile off-canvas nav toggle: adds a hamburger button + backdrop
+         for viewports <= 768px (see assets/index-BI0aO_qE.css). This does
+         not touch the React tree; it only toggles a class on <html> that
+         the CSS above uses to slide the existing .sidebar in/out. -->
+    <script>
+      (function () {
+        function ready(fn) {
+          if (document.readyState !== "loading") fn();
+          else document.addEventListener("DOMContentLoaded", fn);
+        }
+        ready(function () {
+          if (document.getElementById("mobile-nav-toggle")) return;
+
+          var btn = document.createElement("button");
+          btn.id = "mobile-nav-toggle";
+          btn.className = "mobile-nav-toggle";
+          btn.type = "button";
+          btn.setAttribute("aria-label", "Toggle navigation menu");
+          btn.setAttribute("aria-expanded", "false");
+          btn.innerHTML = "<span></span>";
+
+          var backdrop = document.createElement("div");
+          backdrop.id = "mobile-nav-backdrop";
+          backdrop.className = "mobile-nav-backdrop";
+
+          function isOpen() {
+            return document.documentElement.classList.contains("mobile-nav-open");
+          }
+          function closeNav() {
+            document.documentElement.classList.remove("mobile-nav-open");
+            btn.setAttribute("aria-expanded", "false");
+          }
+          function toggleNav() {
+            document.documentElement.classList.toggle("mobile-nav-open");
+            btn.setAttribute("aria-expanded", isOpen() ? "true" : "false");
+          }
+
+          btn.addEventListener("click", toggleNav);
+          backdrop.addEventListener("click", closeNav);
+
+          document.body.appendChild(btn);
+          document.body.appendChild(backdrop);
+
+          // Auto-close the drawer when a nav link is tapped on mobile.
+          document.addEventListener(
+            "click",
+            function (e) {
+              var navItem = e.target && e.target.closest && e.target.closest(".nav-item");
+              if (navItem) closeNav();
+            },
+            true
+          );
+
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") closeNav();
+          });
+        });
+      })();
+    </script>
   </body>
 </html>
