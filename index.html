@@ -8,10 +8,76 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="module" crossorigin src="/uganda_gis_enterprise/assets/index-CLBcCEYM.js"></script>
     <link rel="stylesheet" crossorigin href="/uganda_gis_enterprise/assets/index-BI0aO_qE.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+    (function(){
+      function mkBtn(label,handler){
+        var b=document.createElement('button');
+        b.textContent=label;
+        b.style.cssText='padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.3);background:rgba(0,0,0,0.6);color:#fff;font-size:0.72rem;cursor:pointer;font-weight:600;line-height:1;';
+        b.onclick=function(e){e.stopPropagation();e.preventDefault();handler();};
+        return b;
+      }
+      function addChartBtn(canvas){
+        if(canvas.dataset.qvDone)return;
+        canvas.dataset.qvDone='1';
+        var card=canvas.closest('.glass-card')||canvas.parentElement;
+        if(!card)return;
+        var cs=getComputedStyle(card);
+        if(cs.position==='static')card.style.position='relative';
+        var wrap=document.createElement('div');
+        wrap.style.cssText='position:absolute;top:14px;right:16px;z-index:6;';
+        wrap.appendChild(mkBtn('PNG',function(){
+          try{
+            var a=document.createElement('a');
+            a.href=canvas.toDataURL('image/png');
+            a.download='chart_export.png';
+            document.body.appendChild(a);a.click();document.body.removeChild(a);
+          }catch(err){alert('Could not export this chart image.');}
+        }));
+        card.appendChild(wrap);
+      }
+      function addMapBtns(mapEl){
+        if(mapEl.dataset.qvDone)return;
+        mapEl.dataset.qvDone='1';
+        var wrap=document.createElement('div');
+        wrap.style.cssText='position:absolute;top:10px;right:10px;z-index:1000;display:flex;gap:6px;';
+        wrap.appendChild(mkBtn('PNG',function(){
+          if(!window.html2canvas){alert('Export library still loading, please try again in a moment.');return;}
+          window.html2canvas(mapEl,{useCORS:true,logging:false}).then(function(cv){
+            var a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download='map_export.png';
+            document.body.appendChild(a);a.click();document.body.removeChild(a);
+          }).catch(function(){alert('Could not capture this map image (basemap tiles blocked the export). Try again after the map finishes loading.');});
+        }));
+        wrap.appendChild(mkBtn('PDF',function(){
+          if(!window.html2canvas||!window.jspdf){alert('Export library still loading, please try again in a moment.');return;}
+          window.html2canvas(mapEl,{useCORS:true,logging:false}).then(function(cv){
+            var pdf=new window.jspdf.jsPDF({orientation:cv.width>cv.height?'landscape':'portrait',unit:'pt'});
+            var pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+            var sc=Math.min(pw/cv.width,ph/cv.height),iw=cv.width*sc,ih=cv.height*sc;
+            pdf.addImage(cv.toDataURL('image/png'),'PNG',(pw-iw)/2,(ph-ih)/2,iw,ih);
+            pdf.save('map_export.pdf');
+          }).catch(function(){alert('Could not capture this map for PDF export (basemap tiles blocked the export). Try again after the map finishes loading.');});
+        }));
+        if(getComputedStyle(mapEl).position==='static')mapEl.style.position='relative';
+        mapEl.appendChild(wrap);
+      }
+      function scan(){
+        document.querySelectorAll('canvas').forEach(addChartBtn);
+        document.querySelectorAll('.leaflet-container').forEach(addMapBtns);
+      }
+      var mo=new MutationObserver(function(){scan();});
+      mo.observe(document.body,{childList:true,subtree:true});
+      scan();
+      window.addEventListener('load',scan);
+      setInterval(scan,2000);
+    })();
+    </script>
   </body>
 </html>
