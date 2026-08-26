@@ -520,7 +520,7 @@ function AtcTrendsSection(){
       x.jsx("div",{style:{fontSize:"0.9rem",color:"#fff",fontWeight:600,marginBottom:"10px"},children:"All 15 ATC Locations — Full Detail"}),
       x.jsx("div",{style:{overflowX:"auto"},children:x.jsxs("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:"0.8rem"},children:[
         x.jsx("thead",{children:x.jsx("tr",{children:tblCols.map(c=>x.jsx("th",{style:{padding:"8px 10px",textAlign:c.align||"left",color:"rgba(255,255,255,0.6)",fontSize:"0.72rem",textTransform:"uppercase",letterSpacing:"0.4px",whiteSpace:"nowrap",borderBottom:"1px solid rgba(255,255,255,0.15)"},children:c.label},c.key))})}),
-        x.jsx("tbody",{children:A.station_table.map((r,ri)=>x.jsx("tr",{style:{borderBottom:"1px solid rgba(255,255,255,0.06)"},children:tblCols.map((c,ci)=>x.jsx("td",{style:{padding:"7px 10px",color:ci===0?"#e2e8f0":"rgba(255,255,255,0.75)",textAlign:c.align||"left"},children:(c.key==="heavy_vehicle_pct"?axcPct(r[c.key]):axcFmt(r[c.key]))},c.key))},ri))})
+        x.jsx("tbody",{children:A.station_table.map((r,ri)=>x.jsx("tr",{style:{borderBottom:"1px solid rgba(255,255,255,0.06)"},children:tblCols.map((c,ci)=>x.jsx("td",{style:{padding:"7px 10px",color:ci===0?"#e2e8f0":"rgba(255,255,255,0.75)",textAlign:c.align||"left"},children:(c.key==="heavy_vehicle_pct"?axcPct(r[c.key]):(typeof r[c.key]==="number"?axcFmt(r[c.key]):(r[c.key]||"—")))},c.key))},ri))})
       ]})})
     ]})
   ]});
