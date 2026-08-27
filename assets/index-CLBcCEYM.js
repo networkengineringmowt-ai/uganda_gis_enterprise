@@ -208,6 +208,14 @@ function AxleComplianceTab(){
       {key:"label",label:"Vehicle Configuration"},{key:"n",label:"Records",align:"right"},
       {key:"n_overloaded",label:"Overloaded",align:"right"},{key:"pct_overloaded",label:"Overload Rate %",align:"right"}],
       render:(r)=>[r.label, axcFmt(r.n), axcFmt(r.n_overloaded), axcPct(r.pct_overloaded)]},
+    vehicle_classes: {rows:D.system.vehicle_class_table, searchKey:"class", defaultSortKey:"records", cols:[
+      {key:"class",label:"Vehicle Class"},{key:"records",label:"Trips",align:"right"},
+      {key:"overloaded",label:"Overloaded",align:"right"},{key:"overload_rate_pct",label:"Overload Rate %",align:"right"},{key:"avg_gvw_t",label:"Avg GVW (t)",align:"right"}],
+      render:(r)=>[r.class, axcFmt(r.records), axcFmt(r.overloaded), axcPct(r.overload_rate_pct), axcFmt(r.avg_gvw_t)]},
+    axle_configs: {rows:D.survey.configuration_table, searchKey:"config", defaultSortKey:"records", cols:[
+      {key:"config",label:"Axle Configuration"},{key:"records",label:"Records",align:"right"},
+      {key:"overloaded",label:"Overloaded",align:"right"},{key:"overload_rate_pct",label:"Overload Rate %",align:"right"}],
+      render:(r)=>[r.config, axcFmt(r.records), axcFmt(r.overloaded), axcPct(r.overloaded && r.records ? 100*r.overloaded/r.records : 0)]},
   };
   const v = views[axcTab];
   const rows = axcSortRows(v.rows, (v.rows[0] && axcSortKey in v.rows[0])? axcSortKey : v.defaultSortKey, axcSortDir, v.searchKey, axcSearch);
@@ -281,8 +289,8 @@ function AxleComplianceTab(){
       axcChartCard("GVW Distribution — Mbale Weighbridge (5t bins)",x.jsx(xx,{type:"bar",data:gvwHistSysChart,options:axcMergeOpt({plugins:{legend:{display:false}}})}),280),
       axcChartCard("Overload Amount Above Legal GVW (2t bins)",x.jsx(xx,{type:"bar",data:overloadHistChart,options:axcMergeOpt({plugins:{legend:{display:false}}})}),280),
       axcChartCard("Vehicle Type Breakdown — Survey Records",x.jsx(xx,{type:"bar",data:vtypeChart,options:axcMergeOpt({})}),280),
-      axcChartCard("Top 20 Vehicle Classes by Volume — Mbale WB",x.jsx(xx,{type:"bar",data:vclassChart,options:axcMergeOpt({indexAxis:"y",plugins:{legend:{display:false}},scales:{y:{ticks:{color:"#94a3b8",font:{size:8}},grid:{display:false}}}})}),380),
-      axcChartCard("Top 15 Axle Configurations — Survey Records",x.jsx(xx,{type:"bar",data:configChart,options:axcMergeOpt({plugins:{legend:{display:false}}})}),280),
+      axcChartCard("Top 20 Vehicle Classes by Volume — Mbale WB (all classes in Vehicle Classes tab below)",x.jsx(xx,{type:"bar",data:vclassChart,options:axcMergeOpt({indexAxis:"y",plugins:{legend:{display:false}},scales:{y:{ticks:{color:"#94a3b8",font:{size:8}},grid:{display:false}}}})}),380),
+      axcChartCard("Top 15 Axle Configurations — Survey Records (all configs in Axle Configurations tab below)",x.jsx(xx,{type:"bar",data:configChart,options:axcMergeOpt({plugins:{legend:{display:false}}})}),280),
       axcChartCard("Monthly Compliance Rate — Mbale WB ("+D.system.month_table.length+" months)",x.jsx(xx,{type:"line",data:monthChart,options:axcMergeOpt({plugins:{legend:{display:false}},scales:{y:{min:0,max:100},x:{ticks:{color:"#94a3b8",font:{size:7},maxRotation:90,minRotation:90}}}})}),280),
     ]}),
     x.jsxs("div",{style:{display:"flex",flexWrap:"wrap",gap:"16px",marginBottom:"22px"},children:[
@@ -330,7 +338,7 @@ function AxleComplianceTab(){
     ]}),
     x.jsxs("div",{className:"glass-card",style:{padding:"16px"},children:[
       x.jsxs("div",{style:{display:"flex",flexWrap:"wrap",gap:"10px",alignItems:"center",justifyContent:"space-between",marginBottom:"14px"},children:[
-        x.jsx("div",{style:{display:"flex",flexWrap:"wrap",gap:"8px"},children:Object.keys(views).map(k=>x.jsx("button",{onClick:()=>{axcSetTab(k);axcSetSearch("");axcSetSortKey(views[k].defaultSortKey||"records");axcSetSortDir("desc");},style:{padding:"7px 14px",borderRadius:"20px",border:axcTab===k?"1px solid var(--neon-blue)":"1px solid rgba(255,255,255,0.15)",background:axcTab===k?"rgba(0,243,255,0.15)":"transparent",color:axcTab===k?"var(--neon-blue)":"rgba(255,255,255,0.6)",fontSize:"0.78rem",cursor:"pointer"},children:{stations:"Stations ("+D.survey.n_stations+")",hauliers:"Overloading Hauliers ("+D.system.n_hauliers_with_overload+")",corridors:"Trade Corridors ("+D.system.n_corridors+")",products:"Commodities ("+D.system.n_products+")",national_stations:"National Network Stations ("+W.meta.n_stations+")",national_configs:"National Network Configurations ("+W.by_configuration.length+")"}[k]},k))}),
+        x.jsx("div",{style:{display:"flex",flexWrap:"wrap",gap:"8px"},children:Object.keys(views).map(k=>x.jsx("button",{onClick:()=>{axcSetTab(k);axcSetSearch("");axcSetSortKey(views[k].defaultSortKey||"records");axcSetSortDir("desc");},style:{padding:"7px 14px",borderRadius:"20px",border:axcTab===k?"1px solid var(--neon-blue)":"1px solid rgba(255,255,255,0.15)",background:axcTab===k?"rgba(0,243,255,0.15)":"transparent",color:axcTab===k?"var(--neon-blue)":"rgba(255,255,255,0.6)",fontSize:"0.78rem",cursor:"pointer"},children:{stations:"Stations ("+D.survey.n_stations+")",hauliers:"Overloading Hauliers ("+D.system.n_hauliers_with_overload+")",corridors:"Trade Corridors ("+D.system.n_corridors+")",products:"Commodities ("+D.system.n_products+")",national_stations:"National Network Stations ("+W.meta.n_stations+")",national_configs:"National Network Configurations ("+W.by_configuration.length+")",vehicle_classes:"Vehicle Classes ("+D.system.vehicle_class_table.length+")",axle_configs:"Axle Configurations ("+D.survey.configuration_table.length+")"}[k]},k))}),
         x.jsx("input",{type:"text",placeholder:"Search "+axcTab+"...",value:axcSearch,onChange:e=>axcSetSearch(e.target.value),style:{padding:"7px 12px",borderRadius:"8px",border:"1px solid rgba(255,255,255,0.15)",background:"rgba(0,0,0,0.3)",color:"#fff",fontSize:"0.8rem",minWidth:"220px"}})
       ]}),
       x.jsxs("div",{style:{fontSize:"0.72rem",color:"rgba(255,255,255,0.45)",marginBottom:"8px"},children:["Showing ",axcFmt(rowsShown.length)," of ",axcFmt(rows.length)," matching rows (",axcFmt(v.rows.length)," total in this table, full dataset — click a column header to sort, type to filter)."]}),
@@ -554,8 +562,8 @@ function TcsRegistrySection(){
     ]
   };
   const maintChart = {
-    labels: S.maint_station_table.slice(0,15).map(m=>m.station),
-    datasets:[{label:"TCS Count",data:S.maint_station_table.slice(0,15).map(m=>m.n_tcs),backgroundColor:"#a78bfa"}]
+    labels: S.maint_station_table.map(m=>m.station),
+    datasets:[{label:"TCS Count",data:S.maint_station_table.map(m=>m.n_tcs),backgroundColor:"#a78bfa"}]
   };
   const regionColors = {"Central":"#00f3ff","North":"#00e676","South":"#ffcc00","East":"#ff3355","West":"#a78bfa","North East":"#ff00ea"};
   const regionShareChart = {
@@ -579,7 +587,7 @@ function TcsRegistrySection(){
     x.jsxs("div",{style:{display:"flex",flexWrap:"wrap",gap:"16px",marginBottom:"16px"},children:[
       axcChartCard("Traffic Count Stations by Region (bar)",x.jsx(xx,{type:"bar",data:regionBarChart,options:axcMergeOpt({plugins:{legend:{display:false}}})}),300),
       axcChartCard("Mother vs Daughter Stations by Region (stacked bar)",x.jsx(xx,{type:"bar",data:typeStackedChart,options:axcMergeOpt({scales:{x:{stacked:true,ticks:{color:"#94a3b8",font:{size:9}},grid:{display:false}},y:{stacked:true,ticks:{color:"#94a3b8",font:{size:9}}}}})}),320),
-      axcChartCard("Top 15 Maintenance Stations by TCS Count (horizontal bar)",x.jsx(xx,{type:"bar",data:maintChart,options:axcMergeOpt({indexAxis:"y",plugins:{legend:{display:false}},scales:{y:{ticks:{color:"#94a3b8",font:{size:8}},grid:{display:false}}}})}),360),
+      axcChartCard("Maintenance Stations by TCS Count, All "+S.maint_station_table.length+" Stations (horizontal bar)",x.jsx(xx,{type:"bar",data:maintChart,options:axcMergeOpt({indexAxis:"y",plugins:{legend:{display:false}},scales:{y:{ticks:{color:"#94a3b8",font:{size:8}},grid:{display:false}}}})}),460),
       axcChartCard("Station Share by Region (polar area)",x.jsx(xx,{type:"polarArea",data:regionShareChart,options:axcMergeOpt({scales:{r:{ticks:{color:"#94a3b8",backdropColor:"transparent"},grid:{color:"rgba(255,255,255,0.08)"}},x:undefined,y:undefined}})}),340),
     ]}),
     x.jsx("p",{style:{color:"rgba(255,255,255,0.45)",fontSize:"0.75rem",margin:"0 0 16px 0"},children:"Station locations (longitude/latitude) are geographic data, not chart data — view them plotted on the National GIS Map tab rather than as an x/y chart here."}),
@@ -804,8 +812,10 @@ function BridgeConditionAnalysisSection(){
       axcChartCard("Bridges by Scour Risk Assessment (bar)",x.jsx(xx,{type:"bar",data:scourBar,options:axcMergeOpt({})}),280),
     ]}),
     x.jsx("h3",{style:{fontSize:"1.05rem",color:"#fff",margin:"6px 0 8px 0"},children:"Top 20 Priority Bridges (by combined urgency/priority score)"}),
+    x.jsxs("p",{style:{color:"rgba(255,255,255,0.5)",fontSize:"0.75rem",margin:"0 0 8px 0"},children:["Curated triage shortlist, not the full inventory — every condition/region/intervention chart above already reflects all ",axcFmt(s.total_bridges)," bridges. The complete per-structure NBMS register (423 structures) is listed in full further up this tab."]}),
     priorityTable(B.top_priority_bridges,bSort,setBSort,"Bridge No",true),
     x.jsx("h3",{style:{fontSize:"1.05rem",color:"#fff",margin:"20px 0 8px 0"},children:"Top 20 Priority Culverts (by combined urgency/priority score)"}),
+    x.jsxs("p",{style:{color:"rgba(255,255,255,0.5)",fontSize:"0.75rem",margin:"0 0 8px 0"},children:["Curated triage shortlist, not the full inventory — every condition/region/intervention chart above already reflects all ",axcFmt(s.total_culverts)," culverts. The complete per-structure NBMS register (396 structures) is listed in full further up this tab."]}),
     priorityTable(B.top_priority_culverts,cSort,setCSort,"Culvert No",false),
   ]});
 }
