@@ -1465,18 +1465,6 @@ const JT_DATA={"total_segments": 237, "total_routes": 35, "routes": ["Arua - Kob
 function JourneyTimeSpeedSection(){
   const J = JT_DATA;
   const routesSorted = Object.entries(J.route_avg_ip_speed_kmh).sort((a,b)=>a[1]-b[1]);
-  const slowest15 = routesSorted.slice(0,15);
-  const fastest10 = routesSorted.slice(-10).reverse();
-
-  const slowRoutesBar = {
-    labels: slowest15.map(r=>r[0]),
-    datasets:[{label:"Inter-Peak Avg Speed (km/h)", data: slowest15.map(r=>r[1]), backgroundColor: slowest15.map(r=>r[1]<25?"#ff3355":r[1]<40?"#ff8c00":"#ffcc00")}]
-  };
-
-  const fastRoutesBar = {
-    labels: fastest10.map(r=>r[0]),
-    datasets:[{label:"Inter-Peak Avg Speed (km/h)", data: fastest10.map(r=>r[1]), backgroundColor:"#00e676"}]
-  };
 
   const speedBands = {"< 20 km/h (Severe Congestion)":0,"20-35 km/h (Congested)":0,"35-50 km/h (Moderate)":0,"> 50 km/h (Free-flow)":0};
   Object.values(J.route_avg_ip_speed_kmh).forEach(s=>{
@@ -1501,15 +1489,23 @@ function JourneyTimeSpeedSection(){
   };
 
   const scatterDistSpeed = {
-    datasets:[{label:"Segments: Distance vs Inter-Peak Speed", data: J.all_segments.filter(s=>s.ip_speed_kmh).map(s=>({x:s.distance_km,y:s.ip_speed_kmh})), backgroundColor:"#a78bfa"}]
+    datasets:[{label:"All "+J.all_segments.filter(s=>s.ip_speed_kmh).length+" Segments: Distance vs Inter-Peak Speed", data: J.all_segments.filter(s=>s.ip_speed_kmh).map(s=>({x:s.distance_km,y:s.ip_speed_kmh})), backgroundColor:"#a78bfa"}]
   };
+
+  // Complete route-level average speed bar (ALL routes, not top/bottom N)
+  const allRoutesBar = {
+    labels: routesSorted.map(r=>r[0]),
+    datasets:[{label:"Inter-Peak Avg Speed (km/h)", data: routesSorted.map(r=>r[1]), backgroundColor: routesSorted.map(r=>r[1]<20?"#ff3355":r[1]<35?"#ff8c00":r[1]<50?"#ffcc00":"#00e676")}]
+  };
+
+  const bandColor = s=> s<20?"#ff3355":s<35?"#ff8c00":s<50?"#ffcc00":"#00e676";
 
   return x.jsxs("div",{style:{marginTop:"30px",borderTop:"1px solid rgba(255,255,255,0.12)",paddingTop:"20px",marginBottom:"18px"},children:[
     x.jsx("h2",{style:{fontSize:"1.4rem",color:"#fff",margin:"0 0 4px 0",display:"flex",alignItems:"center",gap:"10px"},children:"⏱️ Journey Time & Average Travel Speed Survey (Oct 2019)"}),
     x.jsxs("p",{style:{color:"rgba(255,255,255,0.6)",fontSize:"0.85rem",margin:"4px 0 0 0",maxWidth:"1100px",lineHeight:1.5},children:["GPS-timed floating-car runs across ",
       x.jsx("b",{style:{color:"#fff"},children:J.total_segments+" road segments"})," on ",
       x.jsx("b",{style:{color:"#fff"},children:J.total_routes+" national corridors"}),". Slowest corridor: ",
-      x.jsx("b",{style:{color:"#ff3355"},children:routesSorted[0][0]})," at ",routesSorted[0][1]," km/h inter-peak average."]}),
+      x.jsx("b",{style:{color:"#ff3355"},children:routesSorted[0][0]})," at ",routesSorted[0][1]," km/h inter-peak average. All ",J.total_routes," corridors and all ",J.total_segments," segments are shown in full below — no top-N filtering."]}),
     x.jsx("details",{style:{marginTop:"8px"},children:x.jsxs("summary",{style:{color:"var(--neon-blue)",cursor:"pointer",fontSize:"0.78rem"},children:["Methodology & data-quality notes (Journey Time Survey)",x.jsx("div",{style:{color:"rgba(255,255,255,0.55)",fontSize:"0.76rem",marginTop:"8px",lineHeight:1.6,maxWidth:"1100px"},children:J.methodology_note})]})}),
     x.jsxs("div",{style:{display:"flex",flexWrap:"wrap",gap:"14px",marginBottom:"18px",marginTop:"14px"},children:[
       axcCard("Segments Surveyed",axcFmt(J.total_segments),"GPS floating-car runs","var(--neon-blue)"),
@@ -1518,11 +1514,33 @@ function JourneyTimeSpeedSection(){
       axcCard("Fastest Corridor",routesSorted[routesSorted.length-1][0],routesSorted[routesSorted.length-1][1]+" km/h avg","#00e676"),
     ]}),
     x.jsxs("div",{style:{display:"flex",flexWrap:"wrap",gap:"16px",marginBottom:"16px"},children:[
-      axcChartCard("15 Slowest Corridors, Inter-Peak Avg Speed (horizontal bar)",x.jsx(xx,{type:"bar",data:slowRoutesBar,options:axcMergeOpt({indexAxis:"y",scales:{x:{title:{display:true,text:"km/h",color:"#94a3b8"},ticks:{color:"#94a3b8",font:{size:9}}},y:{ticks:{color:"#94a3b8",font:{size:7}}}}})}),380),
-      axcChartCard("10 Fastest Corridors, Inter-Peak Avg Speed (bar)",x.jsx(xx,{type:"bar",data:fastRoutesBar,options:axcMergeOpt({indexAxis:"y",scales:{x:{title:{display:true,text:"km/h",color:"#94a3b8"},ticks:{color:"#94a3b8",font:{size:9}}},y:{ticks:{color:"#94a3b8",font:{size:7}}}}})}),340),
-      axcChartCard("Corridor Congestion Bands (doughnut)",x.jsx(xx,{type:"doughnut",data:speedDoughnut,options:axcMergeOpt({scales:undefined})}),340),
-      axcChartCard("Kampala–Jinja Corridor: Speed by Time Period (bar)",x.jsx(xx,{type:"bar",data:periodBar,options:axcMergeOpt({scales:{x:{ticks:{color:"#94a3b8",font:{size:7}}},y:{title:{display:true,text:"km/h",color:"#94a3b8"},ticks:{color:"#94a3b8",font:{size:9}}}}})}),320),
-      axcChartCard("Segments: Distance vs Inter-Peak Speed (scatter)",x.jsx(xx,{type:"scatter",data:scatterDistSpeed,options:axcMergeOpt({scales:{x:{title:{display:true,text:"Segment Distance (km)",color:"#94a3b8"},ticks:{color:"#94a3b8",font:{size:9}}},y:{title:{display:true,text:"Speed (km/h)",color:"#94a3b8"},ticks:{color:"#94a3b8",font:{size:9}}}}})}),300),
+      axcChartCard("All "+routesSorted.length+" Corridors, Inter-Peak Avg Speed (horizontal bar)",x.jsx(xx,{type:"bar",data:allRoutesBar,options:axcMergeOpt({indexAxis:"y",scales:{x:{title:{display:true,text:"km/h",color:"#94a3b8"},ticks:{color:"#94a3b8",font:{size:9}}},y:{ticks:{color:"#94a3b8",font:{size:6}}}}})}),Math.max(600,routesSorted.length*16)),
+      axcChartCard("Corridor Congestion Bands, All Categories (doughnut)",x.jsx(xx,{type:"doughnut",data:speedDoughnut,options:axcMergeOpt({scales:undefined})}),340),
+      axcChartCard("Kampala–Jinja Corridor: Speed by Time Period, All Segments (bar)",x.jsx(xx,{type:"bar",data:periodBar,options:axcMergeOpt({scales:{x:{ticks:{color:"#94a3b8",font:{size:7}}},y:{title:{display:true,text:"km/h",color:"#94a3b8"},ticks:{color:"#94a3b8",font:{size:9}}}}})}),320),
+      axcChartCard("All Segments: Distance vs Inter-Peak Speed (scatter)",x.jsx(xx,{type:"scatter",data:scatterDistSpeed,options:axcMergeOpt({scales:{x:{title:{display:true,text:"Segment Distance (km)",color:"#94a3b8"},ticks:{color:"#94a3b8",font:{size:9}}},y:{title:{display:true,text:"Speed (km/h)",color:"#94a3b8"},ticks:{color:"#94a3b8",font:{size:9}}}}})}),300),
+    ]}),
+    x.jsxs("h3",{style:{fontSize:"1.05rem",color:"#fff",margin:"6px 0 8px 0"},children:["Complete Segment-Level Journey Time Register — All ",axcFmt(J.all_segments.length)," Records (Scroll View)"]}),
+    x.jsxs("div",{style:{overflowX:"auto",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"8px",maxHeight:"520px",overflowY:"auto"},children:[
+      x.jsxs("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:"0.78rem"},children:[
+        x.jsx("thead",{style:{position:"sticky",top:0,background:"#0a0f1e",zIndex:1},children:x.jsxs("tr",{children:[
+          x.jsx("th",{style:{padding:"6px 8px",textAlign:"left",color:"rgba(255,255,255,0.75)"},children:"Corridor"}),
+          x.jsx("th",{style:{padding:"6px 8px",textAlign:"left",color:"rgba(255,255,255,0.75)"},children:"From"}),
+          x.jsx("th",{style:{padding:"6px 8px",textAlign:"left",color:"rgba(255,255,255,0.75)"},children:"To"}),
+          x.jsx("th",{style:{padding:"6px 8px",textAlign:"left",color:"rgba(255,255,255,0.75)"},children:"Distance (km)"}),
+          x.jsx("th",{style:{padding:"6px 8px",textAlign:"left",color:"rgba(255,255,255,0.75)"},children:"AM Speed"}),
+          x.jsx("th",{style:{padding:"6px 8px",textAlign:"left",color:"rgba(255,255,255,0.75)"},children:"Inter-Peak Speed"}),
+          x.jsx("th",{style:{padding:"6px 8px",textAlign:"left",color:"rgba(255,255,255,0.75)"},children:"PM Speed"}),
+        ]})}),
+        x.jsx("tbody",{children:J.all_segments.map((s,i)=>x.jsxs("tr",{style:{borderTop:"1px solid rgba(255,255,255,0.06)",background:i%2?"rgba(255,255,255,0.02)":"transparent"},children:[
+          x.jsx("td",{style:{padding:"4px 8px"},children:s.route}),
+          x.jsx("td",{style:{padding:"4px 8px"},children:s.from}),
+          x.jsx("td",{style:{padding:"4px 8px"},children:s.to}),
+          x.jsx("td",{style:{padding:"4px 8px"},children:s.distance_km}),
+          x.jsx("td",{style:{padding:"4px 8px",color:s.am_speed_kmh?bandColor(s.am_speed_kmh):"#64748b"},children:s.am_speed_kmh||"—"}),
+          x.jsx("td",{style:{padding:"4px 8px",color:s.ip_speed_kmh?bandColor(s.ip_speed_kmh):"#64748b"},children:s.ip_speed_kmh||"—"}),
+          x.jsx("td",{style:{padding:"4px 8px",color:s.pm_speed_kmh?bandColor(s.pm_speed_kmh):"#64748b"},children:s.pm_speed_kmh||"—"}),
+        ]},i))})
+      ]})
     ]}),
   ]});
 }
