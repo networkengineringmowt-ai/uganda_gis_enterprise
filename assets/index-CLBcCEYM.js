@@ -1838,18 +1838,6 @@ function WorldPopDistrictAccessSection(){
     datasets:[{label:"All "+D.length+" Districts: Road Density vs Population Density", data: D.filter(d=>d.pop_density_km2!=null).map(d=>({x:d.pop_density_km2,y:d.road_dens_kmkm2,label:d.district})), backgroundColor:"#00f3ff"}]
   };
 
-  const byPopPerKm = [...D].filter(d=>d.pop_per_km_road!=null).sort((a,b)=>b.pop_per_km_road-a.pop_per_km_road);
-  const popPerKmBar = {
-    labels: byPopPerKm.map(d=>d.district),
-    datasets:[{label:"People Served per km of Road", data: byPopPerKm.map(d=>d.pop_per_km_road), backgroundColor: byPopPerKm.map(d=>d.pop_per_km_road>600?"#ff3355":d.pop_per_km_road>300?"#ff8c00":"#00e676")}]
-  };
-
-  const byRoadPer1000 = [...D].filter(d=>d.road_km_per_1000pop!=null).sort((a,b)=>a.road_km_per_1000pop-b.road_km_per_1000pop);
-  const roadPer1000Bar = {
-    labels: byRoadPer1000.map(d=>d.district),
-    datasets:[{label:"Road km per 1,000 Population", data: byRoadPer1000.map(d=>d.road_km_per_1000pop), backgroundColor: byRoadPer1000.map(d=>d.road_km_per_1000pop<1?"#ff3355":d.road_km_per_1000pop<3?"#ffcc00":"#00e676")}]
-  };
-
   const verified = W.nphc2024_verified_districts.filter(d=>d.pop_2014);
   const growthCompare = {
     labels: verified.map(d=>d.district),
@@ -1880,9 +1868,8 @@ function WorldPopDistrictAccessSection(){
       axcChartCard("Population Density Distribution, All "+D.length+" Districts (doughnut)",x.jsx(xx,{type:"doughnut",data:densityDoughnut,options:axcMergeOpt({scales:undefined})}),300),
       axcChartCard("Road Density vs Population Density, All "+D.length+" Districts (scatter)",x.jsx(xx,{type:"scatter",data:scatterDensity,options:axcMergeOpt({scales:{x:{title:{display:true,text:"People / km²",color:"#94a3b8"},ticks:{color:"#94a3b8",font:{size:9}}},y:{title:{display:true,text:"Road km / km²",color:"#94a3b8"},ticks:{color:"#94a3b8",font:{size:9}}}}})}),300),
       axcChartCard("Verified NPHC 2014 vs 2024, Districts with Public Figures (grouped bar)",x.jsx(xx,{type:"bar",data:growthCompare,options:axcMergeOpt({scales:{x:{ticks:{color:"#94a3b8",font:{size:9}}},y:{ticks:{color:"#94a3b8",font:{size:9}}}}})}),300),
-      axcChartCard("People Served per km of Road, All "+byPopPerKm.length+" Districts (horizontal bar)",x.jsx(xx,{type:"bar",data:popPerKmBar,options:axcMergeOpt({indexAxis:"y",scales:{x:{ticks:{color:"#94a3b8",font:{size:9}}},y:{ticks:{color:"#94a3b8",font:{size:6}}}}})}),Math.max(600,byPopPerKm.length*13)),
-      axcChartCard("Road km per 1,000 Population, All "+byRoadPer1000.length+" Districts (horizontal bar)",x.jsx(xx,{type:"bar",data:roadPer1000Bar,options:axcMergeOpt({indexAxis:"y",scales:{x:{ticks:{color:"#94a3b8",font:{size:9}}},y:{ticks:{color:"#94a3b8",font:{size:6}}}}})}),Math.max(600,byRoadPer1000.length*13)),
     ]}),
+    x.jsxs("p",{style:{color:"rgba(255,255,255,0.5)",fontSize:"0.75rem",margin:"0 0 8px 0"},children:["Per-district metrics (people served per km of road, road km per 1,000 population, etc.) are not charted as bar graphs — at ",D.length," districts a bar-per-district chart is unreadable. They are reported in full in the sortable-by-eye table below instead, per house style: summary tables for high-cardinality data, charts only where a chart stays legible."]}),
     x.jsxs("h3",{style:{fontSize:"1.05rem",color:"#fff",margin:"6px 0 8px 0"},children:["Complete District Population & Road Access Table — All ",D.length," Districts (Scroll View)"]}),
     x.jsxs("div",{style:{overflowX:"auto",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"8px",maxHeight:"520px",overflowY:"auto"},children:[
       x.jsxs("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:"0.78rem"},children:[
