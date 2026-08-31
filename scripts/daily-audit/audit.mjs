@@ -123,14 +123,29 @@ async function fetchSiblingLatestReport(repo) {
   }
 }
 
+// Words that show up in almost every roads-domain sentence on almost every one of the
+// sibling sites ("national road network spans...", "...total DUCAR road network...").
+// Two contexts sharing only these give a false sense of "same metric" — e.g. "National
+// classified road network spans 21,168.97 km" vs "National Road Network - Spatially
+// Aligned 2,688.2 km" shared just "road" + "network" and got flagged as the same figure,
+// when one is a total network length and the other is a spatial-data-quality metric.
+// Requiring the shared words to include something more specific than this boilerplate
+// cuts that false-positive class without hiding genuine matches (which still share a
+// specific noun — a place name, "mileage", "AADT", etc.).
+const CONTEXT_STOPWORDS = new Set([
+  'road', 'roads', 'network', 'national', 'total', 'spans', 'length',
+  'district', 'districts', 'regional', 'region', 'regions', 'classified',
+  'access', 'community', 'urban', 'government', 'uganda', 'ugandan',
+]);
+
 function compareFigures(selfFigures, repo, siblingReport) {
   const discrepancies = [];
   if (!siblingReport || !siblingReport.accuracy || !siblingReport.accuracy.extractedFigures) return discrepancies;
   for (const sf of selfFigures) {
-    const ctxWords = sf.context.toLowerCase().match(/[a-z]{4,}/g) || [];
+    const ctxWords = (sf.context.toLowerCase().match(/[a-z]{4,}/g) || []).filter((w) => !CONTEXT_STOPWORDS.has(w));
     if (ctxWords.length === 0) continue;
     for (const of of siblingReport.accuracy.extractedFigures) {
-      const octxWords = (of.context || '').toLowerCase().match(/[a-z]{4,}/g) || [];
+      const octxWords = ((of.context || '').toLowerCase().match(/[a-z]{4,}/g) || []).filter((w) => !CONTEXT_STOPWORDS.has(w));
       const shared = ctxWords.filter((w) => octxWords.includes(w));
       if (shared.length < 2) continue;
       if (sf.value === 0 || of.value === 0) continue;
