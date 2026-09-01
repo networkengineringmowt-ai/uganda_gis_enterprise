@@ -1,12 +1,23 @@
-# Prompt for Antigravity — wire the Uganda Roads GIS app to live Supabase data
+# Prompt for Antigravity — wire the Uganda Roads GIS sites to ONE shared live Supabase database
 
 Paste everything below this line into Antigravity. It's written to be self-contained — you're starting with no memory of a prior conversation, so it includes all the context you need.
 
 ---
 
-## Background
+## Platform-wide decision (2026-09-01) — read this before starting
 
-This is the Uganda National Roads Asset Management GIS platform — a React/Vite single-page app deployed as a static site on GitHub Pages at `https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/`, repo `networkengineringmowt-ai/uganda_gis_enterprise`. Today it runs entirely on static JSON bundled into the build; the goal of this task is to move it to live queries against a Supabase Postgres database for the tables that are ready, while leaving everything else untouched.
+The user's standing requirement, confirmed explicitly: **"all my sites should have an active sql database and server connection."** She has multiple GIS sites today (`uganda_gis_enterprise`, `uganda_npms`, `uganda_nrms`, `uganda_ntis`, `uganda_ducar`, `uganda_nbms` under the `networkengineeringmowt-ai` org, plus a separate, more mature site `uganda-roads` / NRMS v4.0 under her `priscananjehe1996` account) and, when asked, chose **one shared Supabase project across all of them** over a separate database per site — simpler to secure, back up, and keep consistent. She picked the `uganda_gis_enterprise` 41-table schema (`supabase_schema.sql`, described below) as the base to build out from, since it's the most complete schema and already has verified ETL scripts written against real source data — not the `uganda-roads` schema, even though that project is the one that's actually provisioned today.
+
+That means your job is bigger than the original single-site scope this prompt was first written for. Two things need real on-the-ground judgment with actual credentials, which is exactly why this is going to Antigravity and not staying in a credential-free cloud session:
+
+1. **Which physical Supabase project instance becomes "the one."** `uganda-roads` already has a live, provisioned Supabase Postgres project (42 tables, real Express server built around it, Docker/K8s manifests). `uganda_gis_enterprise` only has a *target* schema file, never applied anywhere. Check both: does the `uganda-roads` project's `information_schema.tables` already have real data worth preserving? If so, the pragmatic path is probably to extend *that* project with the `uganda_gis_enterprise` schema (add its 41 tables, reconciling any name/column overlaps) rather than standing up a third empty project and migrating data into it. If `uganda-roads`'s tables turn out to be empty or stale, provisioning fresh against the `uganda_gis_enterprise` schema and treating that as canonical is simpler. Use your judgment once you can actually see both databases — this prompt can't decide it for you sight-unseen.
+2. **Reconciling the two schemas.** `uganda-roads`'s schema (pull it live from that project via `information_schema`, don't trust a summary) and `uganda_gis_enterprise`'s `supabase_schema.sql` were designed independently and will have overlapping concepts (both cover road links, bridges/structures, pavement condition, traffic) under possibly different table/column names. Don't just concatenate them — map overlapping concepts to one table each, keep whichever version has richer/more real columns, and document the mapping so nothing silently duplicates.
+
+Once the single backend is settled, the remaining sites (`uganda_npms`, `uganda_nrms`, `uganda_ntis`, `uganda_ducar`, `uganda_nbms`) each need their own wiring pass — same pattern as the `uganda_gis_enterprise` work below (find their real source JSON, map it to the shared schema, write an ETL script, wire the frontend query-by-query) but that mapping work hasn't been done yet for any of them. Do `uganda_gis_enterprise` first (fully scoped below, ready to execute) as the proof of pattern, then repeat for the others. Two of them have existing state worth knowing about first: `uganda_npms`'s live site currently reads a local `pms_backend.sqlite` produced by an earlier Antigravity run (3 tables confirmed real: `pavement_fwd_deflections`, `pavement_dcp_tests`, `traffic_axle_loads` — see the platform's `/areas/uganda-gis-enterprise-platform.md`-equivalent notes on which columns in those were found to be synthetic/constant and excluded from display) — migrate that real data into the shared Postgres backend rather than re-deriving it. `uganda_nrms` is an empty unbuilt scaffold — the user said she'll scope what belongs on it herself later, so don't start building its UI, but it can still be added to the shared backend's access list once she does.
+
+## Background — the uganda_gis_enterprise piece (fully scoped, do this part first)
+
+This is the Uganda National Roads Asset Management GIS platform — a React/Vite single-page app deployed as a static site on GitHub Pages at `https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/`, repo `networkengineringmowt-ai/uganda_gis_enterprise`. Today it runs entirely on static JSON bundled into the build; the goal of this part of the task is to move it to live queries against the shared Supabase Postgres database (see decision above) for the tables that are ready, while leaving everything else untouched.
 
 All of the groundwork already exists in the user's Google Drive, under `MOWT/Uganda National Road Network Repository/`:
 
@@ -25,10 +36,12 @@ Why you're doing this instead of another agent: the assistant that prepared all 
 
 ## Your tasks, in order
 
-### 1. Confirm current state
-Connect to the Supabase project (ask the user for the project ref/URL if you don't have it, and use your own credential-handling — never anything from a prior chat log). Check:
-- Does `information_schema.tables` show all 41 tables from `supabase_schema.sql`? If not, run `supabase_schema.sql` in full first. **`supabase_schema.sql` is the authoritative target schema for this task — not `unified_enterprise_schema.sql`, a different 73-table file also sitting in the repository folder. That file is synthetic placeholder data (see Hard Constraints below) — do not run it, do not treat it as a schema option to choose between.**
-- Is RLS enabled and is `anon` read-only? Run `supabase_secure_grants.sql` then `supabase_enable_rls.sql` if not (safe to re-run either way — both are idempotent).
+### 1. Confirm current state — including the platform-wide project decision
+First, resolve the "which physical Supabase project" question from the section above: connect to both the `uganda-roads` project (ask the user for its ref/URL) and check whether `uganda_gis_enterprise` has ever had a project provisioned for it (ask the user; if none exists yet, you're provisioning fresh). Look at `information_schema.tables` and real row counts on `uganda-roads` — if it has genuine live data, that's your target project going forward for ALL sites, and you'll be adding `supabase_schema.sql`'s 41 tables into it (reconciling overlaps per the guidance above, not just appending). If it turns out empty/stale, provisioning against `supabase_schema.sql` fresh and treating that as canonical is simpler — your call once you can see both. Whichever you choose, do the rest of this task against that one project (never anything from a prior chat log for credentials).
+
+Then, on the chosen project:
+- Does `information_schema.tables` show all 41 tables from `supabase_schema.sql` (accounting for any you merged into existing `uganda-roads` tables during reconciliation)? If not, run `supabase_schema.sql` in full first (or the reconciled subset). **`supabase_schema.sql` is the authoritative target schema for this task — not `unified_enterprise_schema.sql`, a different 73-table file also sitting in the repository folder. That file is synthetic placeholder data (see Hard Constraints below) — do not run it, do not treat it as a schema option to choose between.**
+- Is RLS enabled and is `anon` read-only? Run `supabase_secure_grants.sql` then `supabase_enable_rls.sql` if not (safe to re-run either way — both are idempotent). Note: `uganda-roads`'s own BUGS.md (2026-06-10) flagged the anon key previously had unrestricted INSERT/UPDATE on ~40 tables with RLS disabled, and flagged the service_role key as exposed in plaintext chat and needing rotation — if you're extending that project, confirm both were actually fixed/rotated, don't assume from the BUGS.md note alone.
 - Which tables currently have rows? This tells you whether the ETL scripts have already run.
 
 ### 2. Run the ETL
@@ -64,8 +77,16 @@ Run the production build, verify it locally, then commit and push straight to `m
 
 Use your own git credentials for the push — a real `git push`, not a manual browser upload. After deploy, hard-reload the live URL and confirm the newly-wired sections actually show Supabase-sourced data (check the Network tab for real REST calls to the Supabase project, not just that the page renders).
 
-### 7. Report back
-When done, summarize: which of the 21 tables ended up wired into which UI sections, which are still on static JSON and why, current row counts per table, and anything in `NOT_YET_MAPPED.md` you were able to resolve (e.g. if you found and exported one of the `.tsx` component constants to a real data source).
+### 7. Report back on uganda_gis_enterprise
+When done, summarize: which physical Supabase project you standardized on and why, how the two schemas were reconciled (what got merged vs. added net-new), which of the 21 tables ended up wired into which UI sections, which are still on static JSON and why, current row counts per table, and anything in `NOT_YET_MAPPED.md` you were able to resolve (e.g. if you found and exported one of the `.tsx` component constants to a real data source).
+
+### 8. Repeat the pattern for the other sites
+Once `uganda_gis_enterprise` is live on the shared backend, work through the remaining sites the same way — find real source data, map it to the shared schema (extending it with new tables where a site's data genuinely doesn't fit anything that exists), write/extend an ETL script, wire the frontend, deploy, verify:
+- **`uganda_npms`** — migrate the 3 confirmed-real tables out of its local `pms_backend.sqlite` (`pavement_fwd_deflections`, `pavement_dcp_tests` — note `cbr_subgrade`/`subbase`/`base` columns are constant/non-real and were excluded from the UI, keep them excluded — and `traffic_axle_loads` — note `avg_gvw_tonnes` is a single fixed value across all rows, not a real per-station measurement, keep it excluded from stats) into the shared Postgres backend instead of re-deriving them, then wire the frontend to query live instead of reading the sqlite file. `pavement_visual_condition` (10,558 rows) in that same sqlite is confirmed synthetic (templated names) — do not migrate it. `manual_policy_formulas` (5 rows) is unverified — ask the user before migrating.
+- **`uganda_ntis`, `uganda_ducar`, `uganda_nbms`** — not yet audited for what real source data exists; start with the same kind of source inventory this prompt's author did for `uganda_gis_enterprise` (check `app_data/`-equivalent folders, verify against the platform's standing "never fabricate" rule) before writing any ETL.
+- **`uganda_nrms`** — still an empty unbuilt scaffold; the user said she'll scope what it should contain herself before any UI work starts there. Don't build it out. It's fine to make sure it *can* reach the shared backend (env vars, client wrapper) once she gives the go-ahead, but no features yet.
+
+Apply the same standing platform-wide rules to every site as you wire it (see Task 5 for the `uganda_gis_enterprise`-specific list, and the full standing-rules set in the user's own notes: always report km affected + surface-type breakdown for pavement data, all 6 regions/11+ vehicle classes for traffic data, bridges/culverts always reported separately, decoded labels never raw codes, no selective reporting anywhere).
 
 ## Hard constraints — do not violate these
 
