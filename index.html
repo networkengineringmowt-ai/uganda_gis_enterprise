@@ -360,5 +360,305 @@
       setInterval(init, 2000);
     })();
     </script>
+    <script>
+(function(){
+  if(window.__qvEnhanceInstalled) return;
+  window.__qvEnhanceInstalled = true;
+
+  // ---------- Shared React-controlled-input setter ----------
+  var nativeSelectSetter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value').set;
+  function setReactSelectValue(select, value){
+    nativeSelectSetter.call(select, value);
+    select.dispatchEvent(new Event('change', {bubbles:true}));
+  }
+
+  // ---------- 1. Searchable dropdown wrapper ----------
+  function enhanceSelect(select){
+    if(select.dataset.qvSearch) return;
+    if(select.closest('#qv-nav-cluster')) return;
+    select.dataset.qvSearch = '1';
+
+    var wrap = document.createElement('div');
+    wrap.className = 'qv-select-wrap';
+    wrap.style.cssText = 'position:relative;display:inline-block;width:' + (select.offsetWidth||160) + 'px;max-width:100%;';
+    select.parentNode.insertBefore(wrap, select);
+
+    // Keep the native select for actual state/behavior, but visually hide it
+    // and drive it from a custom searchable combobox.
+    select.style.position = 'absolute';
+    select.style.opacity = '0';
+    select.style.pointerEvents = 'none';
+    select.style.width = '100%';
+    select.style.height = '100%';
+    select.style.top = '0';
+    select.style.left = '0';
+    wrap.appendChild(select);
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'qv-select-btn';
+    var cs = getComputedStyle(select);
+    btn.style.cssText = 'width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:6px;'+
+      'padding:'+(cs.paddingTop||'8px')+' '+(cs.paddingRight||'10px')+' '+(cs.paddingBottom||'8px')+' '+(cs.paddingLeft||'10px')+';'+
+      'background:'+(cs.backgroundColor||'#12121a')+';color:'+(cs.color||'#fff')+';'+
+      'border:1px solid rgba(255,255,255,0.14);border-radius:'+(cs.borderRadius||'8px')+';'+
+      'font:'+(cs.fontSize||'0.82rem')+' '+(cs.fontFamily||'inherit')+';cursor:pointer;position:relative;z-index:1;';
+    var lbl = document.createElement('span');
+    lbl.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    lbl.textContent = select.options[select.selectedIndex] ? select.options[select.selectedIndex].text : '';
+    var caret = document.createElement('span');
+    caret.textContent = '▾';
+    caret.style.cssText = 'opacity:0.6;flex:none;';
+    btn.appendChild(lbl); btn.appendChild(caret);
+    wrap.appendChild(btn);
+
+    var panel = document.createElement('div');
+    panel.style.cssText = 'position:absolute;top:calc(100% + 4px);left:0;right:0;min-width:220px;z-index:100000;'+
+      'background:#15151f;border:1px solid rgba(255,255,255,0.16);border-radius:10px;'+
+      'box-shadow:0 12px 32px rgba(0,0,0,0.5);display:none;overflow:hidden;';
+    var searchWrap = document.createElement('div');
+    searchWrap.style.cssText = 'padding:6px;border-bottom:1px solid rgba(255,255,255,0.08);';
+    var search = document.createElement('input');
+    search.type = 'text';
+    search.placeholder = 'Search...';
+    search.style.cssText = 'width:100%;box-sizing:border-box;padding:6px 8px;background:#0a0a10;color:#fff;'+
+      'border:1px solid rgba(255,255,255,0.14);border-radius:6px;font-size:0.8rem;outline:none;';
+    searchWrap.appendChild(search);
+    var list = document.createElement('div');
+    list.style.cssText = 'max-height:240px;overflow-y:auto;';
+    panel.appendChild(searchWrap); panel.appendChild(list);
+    wrap.appendChild(panel);
+
+    function buildOptions(filter){
+      list.innerHTML = '';
+      var f = (filter||'').toLowerCase();
+      var any = false;
+      Array.from(select.options).forEach(function(opt){
+        if(f && opt.text.toLowerCase().indexOf(f) === -1) return;
+        any = true;
+        var row = document.createElement('div');
+        row.textContent = opt.text;
+        row.style.cssText = 'padding:7px 10px;font-size:0.8rem;color:#fff;cursor:pointer;'+
+          (opt.value === select.value ? 'background:rgba(255,255,255,0.1);font-weight:600;' : '');
+        row.addEventListener('mouseenter', function(){ row.style.background='rgba(255,255,255,0.14)'; });
+        row.addEventListener('mouseleave', function(){ row.style.background = opt.value===select.value?'rgba(255,255,255,0.1)':''; });
+        row.addEventListener('mousedown', function(e){
+          e.preventDefault();
+          setReactSelectValue(select, opt.value);
+          lbl.textContent = opt.text;
+          closePanel();
+        });
+        list.appendChild(row);
+      });
+      if(!any){
+        var none = document.createElement('div');
+        none.textContent = 'No matches';
+        none.style.cssText = 'padding:8px 10px;font-size:0.78rem;color:rgba(255,255,255,0.5);';
+        list.appendChild(none);
+      }
+    }
+
+    function openPanel(){
+      buildOptions('');
+      panel.style.display = 'block';
+      search.value = '';
+      setTimeout(function(){ search.focus(); }, 0);
+      document.addEventListener('mousedown', outsideClick, true);
+    }
+    function closePanel(){
+      panel.style.display = 'none';
+      document.removeEventListener('mousedown', outsideClick, true);
+    }
+    function outsideClick(e){
+      if(!wrap.contains(e.target)) closePanel();
+    }
+    btn.addEventListener('click', function(){
+      if(panel.style.display === 'block') closePanel(); else openPanel();
+    });
+    search.addEventListener('input', function(){ buildOptions(search.value); });
+    search.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closePanel(); btn.focus(); } });
+
+    // Keep label in sync if something else changes the underlying select.
+    select.addEventListener('change', function(){
+      var o = select.options[select.selectedIndex];
+      lbl.textContent = o ? o.text : '';
+    });
+  }
+
+  // ---------- 2. Sortable tables with up/down arrows ----------
+  function cellSortValue(text){
+    var t = text.trim();
+    var num = t.replace(/,/g,'').replace(/^UGX\s*/i,'').replace(/[%$]/g,'').replace(/\s*(km|kg|m|bn|kn)$/i,'');
+    if(num !== '' && !isNaN(num)) return {num:true, v:parseFloat(num)};
+    return {num:false, v:t.toLowerCase()};
+  }
+
+  function enhanceTable(table){
+    if(table.dataset.qvSort) return;
+    var thead = table.querySelector('thead');
+    var tbody = table.querySelector('tbody');
+    if(!thead || !tbody) return;
+    var headRow = thead.rows[thead.rows.length-1];
+    if(!headRow) return;
+    table.dataset.qvSort = '1';
+
+    Array.from(headRow.cells).forEach(function(th, colIdx){
+      th.style.cursor = 'pointer';
+      th.style.userSelect = 'none';
+      th.style.whiteSpace = 'nowrap';
+      var arrow = document.createElement('span');
+      arrow.className = 'qv-sort-arrow';
+      arrow.style.cssText = 'display:inline-flex;flex-direction:column;margin-left:5px;vertical-align:middle;line-height:0.55;font-size:0.55rem;opacity:0.45;';
+      arrow.innerHTML = '<span class="qv-up">▲</span><span class="qv-down">▼</span>';
+      th.appendChild(arrow);
+
+      th.addEventListener('click', function(){
+        var current = th.dataset.qvDir || 'none';
+        var dir = current === 'asc' ? 'desc' : 'asc';
+        Array.from(headRow.cells).forEach(function(c){
+          c.dataset.qvDir = '';
+          var a = c.querySelector('.qv-sort-arrow');
+          if(a) a.style.opacity = '0.45';
+          var up = c.querySelector('.qv-up'), down = c.querySelector('.qv-down');
+          if(up) up.style.color = ''; if(down) down.style.color = '';
+        });
+        th.dataset.qvDir = dir;
+        arrow.style.opacity = '1';
+        var upEl = arrow.querySelector('.qv-up'), downEl = arrow.querySelector('.qv-down');
+        if(dir === 'asc' && upEl){ upEl.style.color = '#4fd1c5'; }
+        if(dir === 'desc' && downEl){ downEl.style.color = '#4fd1c5'; }
+
+        var rows = Array.from(tbody.rows);
+        rows.sort(function(r1, r2){
+          var c1 = r1.cells[colIdx], c2 = r2.cells[colIdx];
+          if(!c1 || !c2) return 0;
+          var v1 = cellSortValue(c1.innerText), v2 = cellSortValue(c2.innerText);
+          var cmp;
+          if(v1.num && v2.num) cmp = v1.v - v2.v;
+          else cmp = String(v1.v).localeCompare(String(v2.v));
+          return dir === 'asc' ? cmp : -cmp;
+        });
+        rows.forEach(function(r){ tbody.appendChild(r); });
+      });
+    });
+  }
+
+  // ---------- 3. Conditional formatting on table cells ----------
+  var STATUS_COLORS = [
+    {re:/^(good|excellent|low risk|stable|paved|operational|active|pass(ed)?)$/i, color:'#3ddc84', bg:'rgba(61,220,132,0.14)'},
+    {re:/^(fair|moderate|medium)$/i, color:'#f5c451', bg:'rgba(245,196,81,0.14)'},
+    {re:/^(poor|deficient|high risk|degraded)$/i, color:'#ff9f43', bg:'rgba(255,159,67,0.14)'},
+    {re:/^(critical|severe|failed|unpaved|inactive|closed)$/i, color:'#ff5c5c', bg:'rgba(255,92,92,0.16)'}
+  ];
+
+  function applyConditionalFormatting(table){
+    if(table.dataset.qvFmt) return;
+    var tbody = table.querySelector('tbody');
+    if(!tbody) return;
+    table.dataset.qvFmt = '1';
+
+    // Text/status based coloring
+    Array.from(tbody.querySelectorAll('td')).forEach(function(td){
+      if(td.querySelector('*')) return; // skip cells already containing rich markup (badges etc.)
+      var t = td.innerText.trim();
+      for(var i=0;i<STATUS_COLORS.length;i++){
+        if(STATUS_COLORS[i].re.test(t)){
+          td.style.color = STATUS_COLORS[i].color;
+          td.style.background = STATUS_COLORS[i].bg;
+          td.style.borderRadius = '4px';
+          td.style.fontWeight = '600';
+          break;
+        }
+      }
+    });
+
+    // Numeric heat-scale coloring per column (skip columns that look like IDs/codes)
+    var headRow = table.tHead && table.tHead.rows[table.tHead.rows.length-1];
+    if(!headRow) return;
+    var colCount = headRow.cells.length;
+    for(var c=0;c<colCount;c++){
+      var headerText = headRow.cells[c].innerText.toLowerCase();
+      if(/\bid\b|code|number|^id$/.test(headerText)) continue;
+      var vals = [];
+      Array.from(tbody.rows).forEach(function(r){
+        var cell = r.cells[c];
+        if(!cell) return;
+        var sv = cellSortValue(cell.innerText);
+        if(sv.num) vals.push(sv.v);
+      });
+      if(vals.length < 3) continue;
+      var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+      if(min === max) continue;
+      Array.from(tbody.rows).forEach(function(r){
+        var cell = r.cells[c];
+        if(!cell || cell.querySelector('*')) return;
+        var sv = cellSortValue(cell.innerText);
+        if(!sv.num) return;
+        var pct = (sv.v - min) / (max - min);
+        if(cell.style.background) return; // don't override status coloring
+        var g = Math.round(200 - pct*140), r2 = Math.round(80 + pct*160);
+        cell.style.background = 'rgba('+r2+','+g+',90,'+(0.08+pct*0.14)+')';
+      });
+    }
+  }
+
+  // ---------- 4b. Targeted code-to-label decode (verified mapping only) ----------
+  // Road Functional Classification column ships raw single-letter codes (M/A/B/C)
+  // duplicating the already-decoded "Road Hierarchy Tier" column. This exact
+  // mapping is verified against the MoWT network build (network2026.shp) —
+  // NOT a generic decoder, only ever applied to this one named column.
+  var ROAD_CLASS_MAP = {
+    'M': 'Class M National Road',
+    'A': 'Class A National Road',
+    'B': 'Class B National Road',
+    'C': 'Class C National Road'
+  };
+  function decodeKnownCodeColumns(table){
+    if(table.dataset.qvDecoded) return;
+    var thead = table.tHead;
+    if(!thead) return;
+    var headRow = thead.rows[thead.rows.length-1];
+    if(!headRow) return;
+    var headers = Array.from(headRow.cells).map(function(th){ return th.textContent.replace(/[▲▼]/g,'').trim(); });
+    var fcIdx = headers.indexOf('Road Functional Classification');
+    if(fcIdx === -1) return;
+    table.dataset.qvDecoded = '1';
+    Array.from(table.tBodies[0].rows).forEach(function(r){
+      var cell = r.cells[fcIdx];
+      if(!cell) return;
+      var raw = cell.textContent.trim();
+      var decoded = ROAD_CLASS_MAP[raw];
+      if(decoded && !cell.dataset.qvDecoded){
+        cell.dataset.qvDecoded = '1';
+        cell.textContent = decoded;
+        cell.title = 'Code: ' + raw;
+      }
+    });
+  }
+
+  // ---------- 4. Truncated text: title tooltip fix ----------
+  function fixTruncation(el){
+    if(el.dataset.qvTitled) return;
+    if(el.scrollWidth > el.clientWidth + 2 && el.children.length === 0){
+      el.dataset.qvTitled = '1';
+      if(!el.title) el.title = el.innerText.trim();
+    }
+  }
+
+  function scan(){
+    document.querySelectorAll('select').forEach(enhanceSelect);
+    document.querySelectorAll('table').forEach(function(t){ enhanceTable(t); decodeKnownCodeColumns(t); applyConditionalFormatting(t); });
+    document.querySelectorAll('.qv-select-btn > span, option, [class*="label"], [class*="Label"], h1,h2,h3,h4,span,div').forEach(function(el){
+      if(el.children.length === 0 && el.scrollWidth && el.clientWidth) fixTruncation(el);
+    });
+  }
+
+  var mo = new MutationObserver(function(){ scan(); });
+  mo.observe(document.body, {childList:true, subtree:true});
+  scan();
+  setInterval(scan, 2500);
+  window.__qvScan = scan;
+})();
+    </script>
   </body>
 </html>
