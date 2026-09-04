@@ -1,0 +1,109 @@
+(function(){
+  'use strict';
+
+  // ---------- 1. insight-wall status cards: swap heavy neon wash for a
+  // quiet surface + a slim colored accent bar + a recolored icon ----------
+  var STATUS_MAP = [
+    { match:/rgba\(0,\s*243,\s*255/i,  accent:'#0a84ff' }, // info    (was cyan)
+    { match:/rgba\(255,\s*153,\s*0/i,  accent:'#ff9f0a' }, // warning (already close)
+    { match:/rgba\(255,\s*51,\s*102/i, accent:'#ff453a' }, // danger  (was hot pink/red)
+    { match:/rgba\(0,\s*255,\s*153/i,  accent:'#30d158' }  // success (was neon green)
+  ];
+
+  function refineInsightPanels(){
+    var panels = document.querySelectorAll('.glass-panel:not([data-se-apple])');
+    panels.forEach(function(el){
+      var style = el.getAttribute('style') || '';
+      var hit = null;
+      for (var i = 0; i < STATUS_MAP.length; i++){
+        if (STATUS_MAP[i].match.test(style)) { hit = STATUS_MAP[i]; break; }
+      }
+      if (!hit) return; // not a status panel (e.g. sidebar itself also uses .glass-panel)
+      el.dataset.seApple = '1';
+      el.style.background = 'rgba(255,255,255,.045)';
+      el.style.borderTop = '1px solid rgba(255,255,255,.08)';
+      el.style.borderRight = '1px solid rgba(255,255,255,.08)';
+      el.style.borderBottom = '1px solid rgba(255,255,255,.08)';
+      el.style.borderLeft = '3px solid ' + hit.accent;
+      var svg = el.querySelector('svg');
+      if (svg) { svg.style.stroke = hit.accent; }
+    });
+  }
+
+  // ---------- 2. conditional-format table cells: tone down heavy washes
+  // to a subtler, consistent semantic tint ----------
+  function refineTableCells(){
+    var cells = document.querySelectorAll('td[style*="rgba"]:not([data-se-apple])');
+    cells.forEach(function(td){
+      var style = td.getAttribute('style') || '';
+      var m = style.match(/background:\s*rgba\(([^)]+)\)/i);
+      if (!m) return;
+      var parts = m[1].split(',').map(function(s){ return parseFloat(s); });
+      var r = parts[0], g = parts[1], b = parts[2];
+      var accent = null;
+      // classify by hue: reddish, greenish, amber, blue-ish
+      if (r > 180 && g < 140 && b < 140) accent = '#ff453a';
+      else if (g > 150 && r < 140) accent = '#30d158';
+      else if (r > 200 && g > 120 && g < 210 && b < 90) accent = '#ff9f0a';
+      else if (b > 180 && r < 140) accent = '#0a84ff';
+      if (!accent) return;
+      td.dataset.seApple = '1';
+      var hexToRgb = function(h){ var n = parseInt(h.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; };
+      var rgb = hexToRgb(accent);
+      td.style.background = 'rgba(' + rgb.join(',') + ',.14)';
+      td.style.borderLeft = '2px solid ' + accent;
+      td.style.color = '#ffffff';
+    });
+  }
+
+  // ---------- 3. sidebar section grouping (visual only, no behavior change) ----------
+  var GROUPS = [
+    { before:'1.', label:'Overview' },
+    { before:'2.', label:'Data & Maps' },
+    { before:'4.', label:'Analytics & Insights' },
+    { before:'7.', label:'Reference & Reports' },
+    { before:'10.', label:'System' }
+  ];
+  function addSidebarGroups(){
+    var nav = document.querySelector('.sidebar-nav');
+    if (!nav) return;
+    var items = Array.from(nav.querySelectorAll('.nav-item'));
+    GROUPS.forEach(function(g){
+      var target = items.find(function(el){
+        return el.textContent.trim().indexOf(g.before) === 0;
+      });
+      if (!target) return;
+      var prev = target.previousElementSibling;
+      if (prev && prev.classList && prev.classList.contains('se-nav-group-label')) return; // already labeled
+      var label = document.createElement('div');
+      label.className = 'se-nav-group-label';
+      label.textContent = g.label;
+      label.setAttribute('data-se-apple-label','1');
+      target.parentNode.insertBefore(label, target);
+    });
+  }
+
+  function runPass(){
+    try { refineInsightPanels(); } catch(e){}
+    try { refineTableCells(); } catch(e){}
+    try { addSidebarGroups(); } catch(e){}
+  }
+
+  function init(){
+    runPass();
+    var mo = new MutationObserver(function(){
+      clearTimeout(window.__appleThemeT);
+      window.__appleThemeT = setTimeout(runPass, 120);
+    });
+    mo.observe(document.body, { childList:true, subtree:true });
+    setInterval(runPass, 2500);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  window.__appleTheme = runPass;
+})();
