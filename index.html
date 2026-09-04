@@ -602,6 +602,49 @@
     }
   }
 
+  // ---------- 5. Data Catalog layer descriptions ----------
+  // Adds a small (i) info icon + native tooltip after each Master GIS Databases
+  // layer label in the Summary Tables "Data Catalog" panel — satisfies the
+  // outstanding "add metadata per layer" ask without touching the registry
+  // (there's no source to add a real description field to). Text is
+  // structural/purpose-only (what the layer is, not specific data values),
+  // so nothing here can go stale or be wrong the way a figure could.
+  var LAYER_DESCRIPTIONS = {
+    'Weighbridge Stations': 'Locations of operational vehicle weighbridges used for axle-load enforcement on the road network.',
+    'Agricultural Hubs & Production Belts': 'Major agricultural production and aggregation hubs, used to assess road demand from agro-industrial traffic.',
+    'Educational Institutions & Schools': 'Locations of schools and educational institutions, used to flag school-zone safety considerations along road corridors.',
+    'National Health Facilities & Regional Hospitals': 'Locations of hospitals and health facilities, used to assess emergency-access response times along the road network.',
+    'Maintenance Regions': "Polygon boundaries of UNRA/MoWT's road maintenance regions, used to assign administrative responsibility for network upkeep.",
+    'Mineral Resource & Mining Zones': 'Locations of mineral resource and mining zones, used to assess road demand from extractive-industry haulage traffic.',
+    'Bridges (NBMS)': 'Point inventory of bridges on the road network, including structure type, condition, and dimensions — reported separately from major culverts.',
+    'Industrial Parks & Special Economic Zones': 'Locations of industrial parks and special economic zones, used to assess road demand from industrial freight traffic.',
+    'National Road Network (NRMS)': 'The current classified national road network maintained by UNRA/MoWT, showing all national road links with surface, class, and maintenance attributes.',
+    'Major Culverts (NBMS)': 'Point inventory of major culverts on the road network, including structure type, condition, and dimensions — reported separately from bridges.',
+    'Traffic Count Stations (MoWT)': 'Locations of MoWT automatic and manual traffic count stations used to monitor vehicle volumes on the national network.',
+    'Towns & Trading Centres': 'Locations of towns and trading centres, used to assess road demand and settlement proximity along the network.',
+    'UBOS Districts': "Current administrative boundaries of Uganda's districts, part of the national admin0-admin4 hierarchy."
+  };
+  function findTextNodeSpan(txt){
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    var node;
+    while (node = walker.nextNode()) {
+      if (node.textContent.trim() === txt) return node.parentElement;
+    }
+    return null;
+  }
+  function addLayerDescriptions(){
+    Object.keys(LAYER_DESCRIPTIONS).forEach(function(label){
+      var span = findTextNodeSpan(label);
+      if (!span || span.tagName !== 'SPAN' || span.dataset.qvDescAdded) return;
+      span.dataset.qvDescAdded = '1';
+      var info = document.createElement('span');
+      info.textContent = ' ⓘ';
+      info.title = LAYER_DESCRIPTIONS[label];
+      info.style.cssText = 'opacity:0.55;cursor:help;font-size:0.85em;';
+      span.appendChild(info);
+    });
+  }
+
   // ---------- 4b. Targeted code-to-label decode (verified mapping only) ----------
   // Road Functional Classification column ships raw single-letter codes (M/A/B/C)
   // duplicating the already-decoded "Road Hierarchy Tier" column. This exact
@@ -648,6 +691,7 @@
   function scan(){
     document.querySelectorAll('select').forEach(enhanceSelect);
     document.querySelectorAll('table').forEach(function(t){ enhanceTable(t); decodeKnownCodeColumns(t); applyConditionalFormatting(t); });
+    addLayerDescriptions();
     document.querySelectorAll('.qv-select-btn > span, option, [class*="label"], [class*="Label"], h1,h2,h3,h4,span,div').forEach(function(el){
       if(el.children.length === 0 && el.scrollWidth && el.clientWidth) fixTruncation(el);
     });
