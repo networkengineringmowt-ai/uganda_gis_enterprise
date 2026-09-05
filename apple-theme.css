@@ -144,3 +144,12 @@ input:focus,select:focus,button:focus-visible{
   outline:2px solid rgba(10,132,255,.55) !important;
   outline-offset:1px;
 }
+
+/* ---------- System Architecture diagram (react-flow): kill the
+   pulsing white bloom Apple never uses; keep a quiet static shadow.
+   Node/edge/minimap accent colors are retinted by JS (see apple_theme.js)
+   since they're set as literal inline styles by the diagram library. ---------- */
+.pulse-node{
+  animation:none !important;
+  box-shadow:var(--se-shadow) !important;
+}

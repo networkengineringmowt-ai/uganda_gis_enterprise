@@ -83,10 +83,39 @@
     });
   }
 
+  // ---------- 4. System Architecture diagram (react-flow): retint the
+  // literal neon rgb() colors the library writes as inline styles on
+  // node borders/handles, edge strokes, and the minimap swatches.
+  // The pulsing white glow itself is killed in CSS (see apple-theme.css). ----------
+  var FLOW_COLOR_MAP = [
+    { re:/rgb\(0,\s*243,\s*255\)/gi,  to:'rgb(10, 132, 255)' },  // cyan   -> systemBlue
+    { re:/rgb\(0,\s*255,\s*102\)/gi,  to:'rgb(48, 209, 88)' },   // green  -> systemGreen
+    { re:/rgb\(255,\s*0,\s*234\)/gi,  to:'rgb(255, 55, 95)' },   // magenta-> systemPink
+    { re:/rgb\(255,\s*170,\s*0\)/gi,  to:'rgb(255, 159, 10)' },  // orange -> systemOrange
+    { re:/rgb\(255,\s*251,\s*0\)/gi,  to:'rgb(255, 214, 10)' },  // yellow -> systemYellow
+    { re:/rgb\(157,\s*0,\s*255\)/gi,  to:'rgb(191, 90, 242)' }   // purple -> systemPurple
+  ];
+  function remapFlowColors(styleStr){
+    for (var i = 0; i < FLOW_COLOR_MAP.length; i++){
+      styleStr = styleStr.replace(FLOW_COLOR_MAP[i].re, FLOW_COLOR_MAP[i].to);
+    }
+    return styleStr;
+  }
+  function refineFlowDiagram(){
+    var els = document.querySelectorAll('.pulse-node, .react-flow__handle, .react-flow__edge-path, .react-flow__minimap rect');
+    els.forEach(function(el){
+      var s = el.getAttribute('style');
+      if (!s) return;
+      var ns = remapFlowColors(s);
+      if (ns !== s) el.setAttribute('style', ns);
+    });
+  }
+
   function runPass(){
     try { refineInsightPanels(); } catch(e){}
     try { refineTableCells(); } catch(e){}
     try { addSidebarGroups(); } catch(e){}
+    try { refineFlowDiagram(); } catch(e){}
   }
 
   function init(){
