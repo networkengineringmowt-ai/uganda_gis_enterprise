@@ -525,8 +525,8 @@
         th.dataset.qvDir = dir;
         arrow.style.opacity = '1';
         var upEl = arrow.querySelector('.qv-up'), downEl = arrow.querySelector('.qv-down');
-        if(dir === 'asc' && upEl){ upEl.style.color = '#0a84ff'; }
-        if(dir === 'desc' && downEl){ downEl.style.color = '#0a84ff'; }
+        if(dir === 'asc' && upEl){ upEl.style.color = '#4fd1c5'; }
+        if(dir === 'desc' && downEl){ downEl.style.color = '#4fd1c5'; }
 
         var rows = Array.from(tbody.rows);
         rows.sort(function(r1, r2){
@@ -545,10 +545,10 @@
 
   // ---------- 3. Conditional formatting on table cells ----------
   var STATUS_COLORS = [
-    {re:/^(good|excellent|low risk|stable|paved|operational|active|pass(ed)?)$/i, color:'#30d158', bg:'rgba(48,209,88,0.14)'},
-    {re:/^(fair|moderate|medium)$/i, color:'#ffd60a', bg:'rgba(255,214,10,0.14)'},
-    {re:/^(poor|deficient|high risk|degraded)$/i, color:'#ff9f0a', bg:'rgba(255,159,10,0.14)'},
-    {re:/^(critical|severe|failed|unpaved|inactive|closed)$/i, color:'#ff453a', bg:'rgba(255,69,58,0.16)'}
+    {re:/^(good|excellent|low risk|stable|paved|operational|active|pass(ed)?)$/i, color:'#3ddc84', bg:'rgba(61,220,132,0.14)'},
+    {re:/^(fair|moderate|medium)$/i, color:'#f5c451', bg:'rgba(245,196,81,0.14)'},
+    {re:/^(poor|deficient|high risk|degraded)$/i, color:'#ff9f43', bg:'rgba(255,159,67,0.14)'},
+    {re:/^(critical|severe|failed|unpaved|inactive|closed)$/i, color:'#ff5c5c', bg:'rgba(255,92,92,0.16)'}
   ];
 
   function applyConditionalFormatting(table){
