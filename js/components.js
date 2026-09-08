@@ -28,15 +28,36 @@ function el(tag, attrs={}, children=[]){
 }
 
 /* ---------------- KPI tiles ---------------- */
+const REDUCE_MOTION = typeof window!=='undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 function kpiGrid(items){
   // items: [{label, value, unit, accent, delta}]
   const grid = el('div',{class:'kpi-grid'});
   items.forEach(it=>{
     const tile = el('div',{class:'kpi-tile', style:`--accent:${it.accent||NEON[0]}`});
     tile.appendChild(el('div',{class:'kpi-label'}, it.label));
-    tile.appendChild(el('div',{class:'kpi-value'}, [it.value, it.unit?el('small',{},' '+it.unit):null]));
+
+    // Animate a count-up for plain numeric values (fmtNum output: digits, commas, optional one decimal group).
+    const raw = it.value;
+    const isNumeric = typeof raw==='string' && /^-?[\d,]+(\.\d+)?$/.test(raw.trim());
+    const target = isNumeric ? parseFloat(raw.replace(/,/g,'')) : null;
+    const decimals = isNumeric && raw.includes('.') ? raw.split('.')[1].length : 0;
+    const numSpan = document.createElement('span');
+    numSpan.textContent = target===null ? raw : fmtNum(0, decimals);
+    const valueEl = el('div',{class:'kpi-value'}, [numSpan, it.unit?el('small',{},' '+it.unit):null]);
+    tile.appendChild(valueEl);
     if(it.delta) tile.appendChild(el('div',{class:'kpi-delta', style:`color:${it.deltaColor||'var(--text-secondary)'}`}, it.delta));
     grid.appendChild(tile);
+
+    if(target!==null && !REDUCE_MOTION){
+      const dur = 700, t0 = performance.now();
+      (function tick(now){
+        const p = Math.min(1, (now-t0)/dur);
+        const eased = 1-Math.pow(1-p,3); // easeOutCubic
+        numSpan.textContent = fmtNum(target*eased, decimals);
+        if(p<1) requestAnimationFrame(tick);
+      })(t0);
+    }
   });
   return grid;
 }
@@ -170,6 +191,12 @@ function dataTable(opts){
     next.disabled = state.page>=totalPages-1;
     next.addEventListener('click', ()=>{ state.page++; render(); });
     pager.appendChild(prev); pager.appendChild(next);
+
+    if(!REDUCE_MOTION){
+      tbody.classList.remove('table-body-fade');
+      void tbody.offsetWidth;
+      tbody.classList.add('table-body-fade');
+    }
   }
 
   searchInput.addEventListener('input', ()=>{ state.page=0; render(); });
@@ -199,6 +226,8 @@ function chartCard(opts){
       options: {
         responsive:true, maintainAspectRatio:false,
         indexAxis: opts.indexAxis || 'x',
+        animation: REDUCE_MOTION ? false : { duration:900, easing:'easeOutQuart' },
+        transitions: { active: { animation: { duration:250 } } },
         plugins:{
           legend:{ display: !!(opts.datasets.length>1 || opts.showLegend), labels:{ color:'#565b6b', font:{size:11}, usePointStyle:true } },
           tooltip:{ backgroundColor:'#14151c', titleColor:'#fff', bodyColor:'#e5e7eb', padding:10, cornerRadius:8 }
@@ -232,7 +261,15 @@ function sectionBlock(titleHtml, subtitle, contentNode){
   return b;
 }
 
-function loadingBlock(msg){ return el('div',{class:'loading-row'}, msg||'Loading real data…'); }
+function loadingBlock(msg){
+  const wrap = el('div',{class:'skeleton-wrap'});
+  const kpis = el('div',{class:'skeleton-kpis'});
+  for(let i=0;i<4;i++) kpis.appendChild(el('div',{class:'skeleton skeleton-kpi'}));
+  wrap.appendChild(kpis);
+  wrap.appendChild(el('div',{class:'skeleton skeleton-block'}));
+  wrap.appendChild(el('div',{class:'skeleton-label'}, msg||'Loading real data…'));
+  return wrap;
+}
 
 function pageHead(title, subtitle, badge){
   const head = el('div',{class:'content-head'});
