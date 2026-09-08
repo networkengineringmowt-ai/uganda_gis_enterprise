@@ -46,7 +46,9 @@ RENDERERS.map = async function(container){
   function setBasemap(key){
     if(currentTiles) map.removeLayer(currentTiles);
     const b = BASEMAPS[key];
-    currentTiles = L.tileLayer(b.url, { subdomains:b.subdomains, attribution:b.attribution, maxZoom:b.maxZoom });
+    const tileOpts = { attribution:b.attribution, maxZoom:b.maxZoom };
+    if(b.subdomains) tileOpts.subdomains = b.subdomains; // omit entirely when absent — passing subdomains:undefined overrides Leaflet's own default and crashes _getSubdomain
+    currentTiles = L.tileLayer(b.url, tileOpts);
     currentTiles.addTo(map);
     [...basemapRow.children].forEach(btn => btn.classList.toggle('active', btn.dataset.key===key));
   }
