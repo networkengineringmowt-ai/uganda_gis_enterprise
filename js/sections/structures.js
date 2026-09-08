@@ -31,6 +31,14 @@ function structFmtDate(v){
   if (!v) return '—';
   return String(v).slice(0, 10);
 }
+// Uganda's real extent (with generous margin) — a handful of source records carry corrupted
+// or lat/lon-swapped coordinates (e.g. a bridge recorded near Spain instead of Uganda). Rather
+// than plot those and let them blow out the map's auto-fit bounds, they're excluded from the
+// map (same treatment as missing coordinates) and disclosed separately; the table still shows
+// their recorded values as-is.
+function inUgandaBounds(lat, lon){
+  return lat >= -2.5 && lat <= 5.5 && lon >= 28 && lon <= 36.5;
+}
 
 // Build one full sub-view (KPI strip + map + table) for either bridges or major culverts.
 // Returns { node, mountMap } — mountMap() lazily creates the Leaflet map the first time
@@ -44,6 +52,12 @@ function buildStructureView(cfg){
   const condCounts = structCountBy(rows, 'condition');
   const condKeys = structSortConditions(Object.keys(condCounts));
   const missingCoords = rows.filter(r => r.coordinate_e == null || r.coordinate_s == null).length;
+  const badCoords = rows.filter(r =>
+    r.coordinate_e != null && r.coordinate_s != null &&
+    !Number.isNaN(r.coordinate_s) && !Number.isNaN(r.coordinate_e) &&
+    !inUgandaBounds(r.coordinate_s, r.coordinate_e)
+  ).length;
+  const plottedCount = rows.length - missingCoords - badCoords;
 
   node.appendChild(kpiGrid([
     { label: 'Total ' + caption, value: fmtNum(rows.length), accent: 'var(--neon-cyan)' },
@@ -51,13 +65,15 @@ function buildStructureView(cfg){
   ]));
   node.appendChild(el('p', { class: 'footnote' },
     fmtNum(rows.length) + ' ' + caption + ' from the FY2025/26 MoWT/UNRA maintenance-strategy structures register. ' +
-    (missingCoords > 0 ? fmtNum(missingCoords) + ' record' + (missingCoords === 1 ? '' : 's') + ' without recorded coordinates are omitted from the map below (shown in the table).' : 'All records carry mapped coordinates.')
+    (missingCoords > 0 ? fmtNum(missingCoords) + ' record' + (missingCoords === 1 ? '' : 's') + ' without recorded coordinates' + (badCoords > 0 ? ', and ' : ' are') : '') +
+    (badCoords > 0 ? fmtNum(badCoords) + ' record' + (badCoords === 1 ? '' : 's') + ' with coordinates recorded well outside Uganda (likely transposed or corrupted in the source register) are' : '') +
+    (missingCoords > 0 || badCoords > 0 ? ' omitted from the map below (shown in the table with their recorded values).' : ' All records carry mapped coordinates.')
   ));
 
   // ---- 2. map ----
   const mapCard = el('div', { class: 'card card-pad' }, [
     el('h3', {}, 'Locations by condition'),
-    el('span', { class: 'tiny-muted' }, fmtNum(rows.length - missingCoords) + ' of ' + fmtNum(rows.length) + ' ' + caption + ' plotted at their recorded coordinates, coloured by condition.'),
+    el('span', { class: 'tiny-muted' }, fmtNum(plottedCount) + ' of ' + fmtNum(rows.length) + ' ' + caption + ' plotted at their recorded coordinates, coloured by condition.'),
     el('div', { class: 'map-legend', style: 'display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 12px;' },
       condKeys.map(k => el('span', { style: 'display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);' }, [
         el('span', { style: `width:10px;height:10px;border-radius:50%;background:${structConditionColor(k)};display:inline-block;` }),
@@ -84,6 +100,7 @@ function buildStructureView(cfg){
       if (r.coordinate_e == null || r.coordinate_s == null) return;
       const lat = r.coordinate_s, lon = r.coordinate_e;
       if (Number.isNaN(lat) || Number.isNaN(lon)) return;
+      if (!inUgandaBounds(lat, lon)) return;
       const marker = L.circleMarker([lat, lon], {
         radius: 5, weight: 1, color: '#1a1c24', fillColor: structConditionColor(r.condition), fillOpacity: 0.85
       }).addTo(mapInstance);
