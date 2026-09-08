@@ -24,7 +24,7 @@ RENDERERS.map = async function(container){
   const mapDiv = el('div',{class:'map-shell', id:'gis-national-map'});
   mapCol.appendChild(mapDiv);
   mapCol.appendChild(el('p',{class:'footnote'},
-    'Basemap tiles courtesy of CARTO / OpenStreetMap contributors. Overlay data: MoWT/UNRA GIS road-network inventory and the platform’s reference GeoJSON layers (bridges, culverts, districts, protected areas and related registers).'
+    'Basemap tiles courtesy of Esri and OpenStreetMap contributors. Overlay data: MoWT/UNRA GIS road-network inventory and the platform’s reference GeoJSON layers (bridges, culverts, districts, protected areas and related registers).'
   ));
 
   const panel = el('div',{class:'card card-pad', style:'flex:1 1 300px;max-width:340px;max-height:640px;overflow-y:auto;'});
@@ -37,9 +37,9 @@ RENDERERS.map = async function(container){
   L.control.scale({ imperial:false }).addTo(map);
 
   const BASEMAPS = {
-    light:   { label:'Light',   url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', subdomains:'abcd', attribution:'&copy; OpenStreetMap contributors &copy; CARTO', maxZoom:19 },
-    voyager: { label:'Voyager', url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', subdomains:'abcd', attribution:'&copy; OpenStreetMap contributors &copy; CARTO', maxZoom:19 },
+    light:   { label:'Light',   url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', attribution:'&copy; Esri, HERE, Garmin, FAO, NOAA, USGS', maxZoom:16 },
     streets: { label:'Streets', url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', subdomains:'abc', attribution:'&copy; OpenStreetMap contributors', maxZoom:19 },
+    world:   { label:'World Street', url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', attribution:'&copy; Esri, HERE, Garmin, FAO, NOAA, USGS', maxZoom:19 },
   };
   let currentTiles = null;
   const basemapRow = el('div',{class:'tab-row', style:'margin:2px 0 16px;'});
@@ -61,6 +61,9 @@ RENDERERS.map = async function(container){
   panel.appendChild(el('h3',{style:'margin-bottom:2px;'}, 'Reference Layers'));
   panel.appendChild(el('p',{class:'tiny-muted', style:'margin-bottom:6px;'}, 'Check a layer to fetch and draw its real features. Large layers are flagged and load on demand.'));
 
+  // CARTO's anonymous basemap tiles now require an account API key (their tiles
+  // return a watermarked "API key required" image without one) — OpenStreetMap and
+  // Esri's public tile services have no such requirement, so those are used instead.
   setBasemap('light');
 
   // ---------------------------------------------------------------- helpers

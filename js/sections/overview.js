@@ -17,7 +17,7 @@ RENDERERS.overview = async function(container){
     { label:'Major Culverts', value: fmtNum(ms.kpi_summary.total_major_culverts), accent:'var(--neon-purple)' },
     { label:'DUCAR District Network', value: fmtNum(135640.8,0), unit:'km', accent:'var(--neon-green)' },
   ]));
-  container.appendChild(el('p',{class:'footnote'}, net.source + ' Bridges and culverts are reported from the MoWT/UNRA 2026 maintenance-strategy structures register — see Bridges &amp; Culverts for full, separate registers.'));
+  container.appendChild(el('p',{class:'footnote'}, net.source + ' Bridges and culverts are reported from the MoWT/UNRA 2026 maintenance-strategy structures register — see Bridges & Culverts for full, separate registers.'));
 
   // ---- Condition + region charts ----
   const condLabels = Object.keys(net.byCondition);
@@ -58,7 +58,7 @@ RENDERERS.overview = async function(container){
       el('h3',{}, f.t), el('p',{class:'muted', style:'margin-top:6px;'}, f.d)
     ]));
   });
-  container.appendChild(sectionBlock('What the data shows', 'A curated set of genuinely distinct findings — see Analytics &amp; Insights for the full chart library.', findGrid));
+  container.appendChild(sectionBlock('What the data shows', 'A curated set of genuinely distinct findings — see Analytics & Insights for the full chart library.', findGrid));
 
   container.appendChild(el('p',{class:'footnote'},
     'Two independent, real MoWT/UNRA source systems feed this platform: the GIS road-network inventory (network.geojson, '+net.linkCount+' links, '+fmtNum(net.totalKm,0)+' km) and the separately-maintained maintenance-strategy planning workbooks ('+fmtNum(ms.kpi_summary.total_network_km,0)+' km assessed, 2026 cycle). Their totals differ slightly because they are captured at different times from different systems — each figure on this site is labelled with its own source rather than forced to a single, falsely-precise number.'

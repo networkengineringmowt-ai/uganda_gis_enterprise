@@ -60,7 +60,7 @@ RENDERERS.maintenance = async function(container){
     { label:'Links in Strategy Register', value: fmtNum(detail.road_links.length), accent:'var(--neon-purple)' },
     { label:'Priority-Planned Links', value: fmtNum(priorityLinks.length), accent:'var(--neon-green)', delta:'FY26/27–FY30/31 programme' },
   ]));
-  container.appendChild(el('p',{class:'footnote'}, 'MoWT/UNRA maintenance-strategy planning workbooks, FY2025/26 cycle. Figures cover the ROAD network only — see Bridges &amp; Culverts for the 521-bridge and 451-culvert registers.'));
+  container.appendChild(el('p',{class:'footnote'}, 'MoWT/UNRA maintenance-strategy planning workbooks, FY2025/26 cycle. Figures cover the ROAD network only — see Bridges & Culverts for the 521-bridge and 451-culvert registers.'));
 
   // ---- Network by Region ----
   const regionLabels = DataStore.REGIONS;
@@ -198,6 +198,6 @@ RENDERERS.maintenance = async function(container){
   })));
 
   container.appendChild(el('p',{class:'footnote'},
-    'Source: MoWT/UNRA maintenance-strategy planning workbooks, FY2025/26 cycle — network condition (VCI), the 5-year investment priority plan, intervention mix, and unit-rate benchmarks above. This page covers routine and periodic road MAINTENANCE funding only; new-construction capital investment (IBP/PIP) is reported separately in the Investment Plan section. Bridges and major culverts are always reported as their own registers — see Bridges &amp; Culverts.'
+    'Source: MoWT/UNRA maintenance-strategy planning workbooks, FY2025/26 cycle — network condition (VCI), the 5-year investment priority plan, intervention mix, and unit-rate benchmarks above. This page covers routine and periodic road MAINTENANCE funding only; new-construction capital investment (IBP/PIP) is reported separately in the Investment Plan section. Bridges and major culverts are always reported as their own registers — see Bridges & Culverts.'
   ));
 };

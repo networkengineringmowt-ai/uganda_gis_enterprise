@@ -74,9 +74,9 @@ function buildStructureView(cfg){
     const div = document.getElementById(mapDivId);
     if (!div) return null;
     mapInstance = L.map(mapDivId, { scrollWheelZoom: false });
-    L.tileLayer('https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-      maxZoom: 18
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '&copy; Esri, HERE, Garmin, FAO, NOAA, USGS',
+      maxZoom: 16
     }).addTo(mapInstance);
 
     const bounds = [];
