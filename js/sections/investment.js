@@ -79,12 +79,12 @@ RENDERERS.investment = async function(container){
     const trendYears = years;
     wrap.appendChild(sectionBlock('Public Investment Plan cycles over time', 'All published cycles with project-level data — not a continuous annual series.', chartGrid([
       chartCard({
-        title:'Combined Project Value by PIP Cycle', subtitle:'Road + bridge/major-culvert project value, UGX billion', type:'bar',
+        title:'Combined Project Value by PIP Cycle', subtitle:'UGX billion', type:'bar',
         labels: trendYears,
         datasets:[{ data: trendYears.map(y=>Math.round(summary[y].combined_value_bn_ushs)), backgroundColor:'#00e5ff', borderRadius:6 }]
       }),
       chartCard({
-        title:'Implementing Agency by PIP Cycle', subtitle:'Project count attributed to UNRA vs MoWT — reflects the mandate transfer described above', type:'bar', stacked:true,
+        title:'Implementing Agency by PIP Cycle', subtitle:'Reflects the 2024 UNRA→MoWT mandate transfer described above', type:'bar', stacked:true,
         labels: trendYears,
         datasets:[
           { label:'UNRA', data: trendYears.map(y=>summary[y].unra_projects), backgroundColor:'#2979ff', borderRadius:4 },

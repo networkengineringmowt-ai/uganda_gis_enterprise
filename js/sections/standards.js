@@ -25,6 +25,7 @@ RENDERERS.standards = async function(container){
       ],
       recommendation: 'Prioritize 1,240 km of Fair-to-Poor links for DBST overlay before structural base failure sets in, preserving asset value at roughly one-quarter the cost of full reconstruction.',
       impact: 'Saves an estimated UGX 184.2 Billion in deferred reconstruction CapEx over a 5-year window.',
+      impactBnUshs: 184.2,
     },
     {
       manual: 'AASHTO Guide for Design of Pavement Structures (1993 / 2020)',
@@ -36,6 +37,7 @@ RENDERERS.standards = async function(container){
       ],
       recommendation: 'Corridors carrying more than 7,500 ESALs/day (e.g. Malaba–Kampala, Masaka–Mbarara) require AC binder reinforcement.',
       impact: 'Reduces annual vehicle-operating costs (VOC) by UGX 78.5 Billion across heavy transport operators.',
+      impactBnUshs: 78.5,
     },
     {
       manual: 'TRL Overseas Road Note 31 & MoWT Geometric Design Manual',
@@ -47,6 +49,7 @@ RENDERERS.standards = async function(container){
       ],
       recommendation: 'Cold milling / resheeting on links with IRI > 5.2 to restore 80 km/h design speed.',
       impact: 'Unlocks UGX 52.1 Billion/yr in logistics delay savings along the Northern Corridor.',
+      impactBnUshs: 52.1,
     },
     {
       manual: 'National Bridge Management System (NBMS Inspection Manual)',
@@ -58,6 +61,7 @@ RENDERERS.standards = async function(container){
       ],
       recommendation: 'Reinforced-concrete aprons, stone pitching and rip-rap at 412 vulnerable bridges before peak rainy seasons in the Elgon and Albertine basins.',
       impact: 'Prevents an estimated UGX 95.0 Billion in emergency restoration costs.',
+      impactBnUshs: 95.0,
     },
   ];
 
@@ -155,6 +159,16 @@ RENDERERS.standards = async function(container){
   function showStandards(){
     btnStd.classList.add('active'); btnFlow.classList.remove('active');
     host.innerHTML = '';
+    host.appendChild(sectionBlock(
+      'Estimated financial impact by standard',
+      'Applying each standard’s threshold-triggered intervention across the network — figures cited above, summed for comparison.',
+      el('div',{style:'max-width:640px;'}, chartCard({
+        title:'Estimated Financial Impact', subtitle:'UGX billion',
+        type:'bar', indexAxis:'y',
+        labels: STANDARDS.map(s => s.metric.split(' — ')[0].split(' (')[0]),
+        datasets:[{ data: STANDARDS.map(s=>s.impactBnUshs), backgroundColor: NEON.slice(0,STANDARDS.length), borderRadius:6 }]
+      }))
+    ));
     host.appendChild(sectionBlock(
       'Engineering Reference Standards',
       'Threshold bands and recommended interventions cited directly from the manuals governing MoWT maintenance decisions.',

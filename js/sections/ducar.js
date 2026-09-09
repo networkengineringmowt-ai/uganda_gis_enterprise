@@ -60,17 +60,17 @@ RENDERERS.ducar = async function(container){
   // ---- Charts: condition distribution + network composition ----
   container.appendChild(sectionBlock('DUCAR network composition', 'Computed from the MoWT district-level condition survey, all 135 districts.', chartGrid([
     chartCard({
-      title: 'Condition Distribution', subtitle: 'DUCAR network km by condition band, all districts',
+      title: 'Condition Distribution',
       type: 'doughnut', labels: ['Good', 'Fair', 'Poor'],
       datasets: [{ data: [Math.round(goodKm), Math.round(fairKm), Math.round(poorKm)], backgroundColor: ['#00ff85', '#fff500', '#ff7a00'], borderWidth: 0 }],
     }),
     chartCard({
-      title: 'Network Length by Road Category', subtitle: 'District, Urban and Community Access roads, km',
+      title: 'Network Length by Road Category',
       type: 'bar', labels: ['District Roads', 'Urban Roads', 'Community Access Roads'],
       datasets: [{ data: [Math.round(distKm), Math.round(urbKm), Math.round(commKm)], backgroundColor: '#00e5ff', borderRadius: 6 }],
     }),
     chartCard({
-      title: 'Paved vs Unpaved', subtitle: 'DUCAR network surface split, km',
+      title: 'Paved vs Unpaved',
       type: 'bar', labels: ['Paved', 'Unpaved'],
       datasets: [{ data: [Math.round(pavedKm), Math.round(unpavedKm)], backgroundColor: ['#2979ff', '#ff7a00'], borderRadius: 6 }],
     }),

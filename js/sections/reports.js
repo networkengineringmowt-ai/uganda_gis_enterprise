@@ -21,6 +21,7 @@ RENDERERS.reports = async function(container){
   function numeric(key){ return feats.map(f => f.properties[key]).filter(v => typeof v === 'number'); }
   function avg(key){ const v = numeric(key); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; }
   const criticalRiskLinks = feats.filter(f => f.properties['Road Safety Risk Band'] === 'Critical').length;
+  const lowRiskLinks = feats.filter(f => f.properties['Road Safety Risk Band'] === 'Low').length;
   const avgAadt = avg('Aadt 2026 Live');
   const avgHeavyTruckAadt = avg('Aadt Heavy Trucks');
   const avgPeakVelocity = avg('Peak Hour Velocity Kmh');
@@ -49,6 +50,8 @@ RENDERERS.reports = async function(container){
         { label:'Bridges', value: fmtNum(ms.kpi_summary.total_bridges), accent:'var(--neon-magenta)', raw: ms.kpi_summary.total_bridges },
         { label:'Major Culverts', value: fmtNum(ms.kpi_summary.total_major_culverts), accent:'var(--neon-purple)', raw: ms.kpi_summary.total_major_culverts },
       ],
+      chart: () => chartCard({ title:'Paved vs Unpaved Network', type:'doughnut',
+        labels:['Paved','Unpaved'], datasets:[{ data:[Math.round(net.pavedKm), Math.round(net.unpavedKm)], backgroundColor:['#2979ff','#ff7a00'], borderWidth:0 }] }),
     },
     {
       id: 'roads', label: 'Roads & Pavement',
@@ -60,6 +63,8 @@ RENDERERS.reports = async function(container){
         { label:'Class C — Primary / District', value: fmtNum(net.byClass.C||0,0), unit:'km', accent:'var(--neon-green)', raw: Math.round(net.byClass.C||0) },
         { label:'Class M — Expressway', value: fmtNum(net.byClass.M||0,0), unit:'km', accent:'var(--neon-pink)', raw: Math.round(net.byClass.M||0) },
       ],
+      chart: () => chartCard({ title:'Network Length by Functional Class', subtitle:'km', type:'bar',
+        labels:['A','B','C','M'], datasets:[{ data:[net.byClass.A||0,net.byClass.B||0,net.byClass.C||0,net.byClass.M||0].map(v=>Math.round(v)), backgroundColor:'#00e5ff', borderRadius:6 }] }),
     },
     {
       id: 'structures', label: 'Bridges & Structures',
@@ -71,6 +76,8 @@ RENDERERS.reports = async function(container){
         { label:'Bridge Asset Value', value: fmtNum(bridgeStructure.asset_value_mn_usd,0), unit:'USD mn', accent:'var(--neon-blue)', raw: bridgeStructure.asset_value_mn_usd },
         { label:'Major Culvert Asset Value', value: fmtNum(culvertStructure.asset_value_mn_usd,0), unit:'USD mn', accent:'var(--neon-green)', raw: culvertStructure.asset_value_mn_usd },
       ],
+      chart: () => chartCard({ title:'Asset Value: Bridges vs Major Culverts', subtitle:'USD million', type:'bar',
+        labels:['Bridges','Major Culverts'], datasets:[{ data:[Math.round(bridgeStructure.asset_value_mn_usd), Math.round(culvertStructure.asset_value_mn_usd)], backgroundColor:['#2979ff','#00ff85'], borderRadius:6 }] }),
     },
     {
       id: 'traffic', label: 'Traffic',
@@ -82,6 +89,8 @@ RENDERERS.reports = async function(container){
         { label:'Links — Critical Safety Risk', value: fmtNum(criticalRiskLinks), accent:'var(--neon-pink)', delta:(criticalRiskLinks/net.linkCount*100).toFixed(0)+'% of network', raw: criticalRiskLinks },
         { label:'Average Crash Rate', value: fmtNum(avgCrashRate,1), unit:'per 100m-veh-km', accent:'var(--neon-magenta)', raw: Number(avgCrashRate.toFixed(1)) },
       ],
+      chart: () => chartCard({ title:'Road Safety Risk Band, National', subtitle:'Links assigned a Critical or Low band', type:'doughnut',
+        labels:['Critical','Low'], datasets:[{ data:[criticalRiskLinks, lowRiskLinks], backgroundColor:['#ff2d78','#00ff85'], borderWidth:0 }] }),
     },
     {
       id: 'investment', label: 'Investment',
@@ -93,6 +102,11 @@ RENDERERS.reports = async function(container){
         { label:'Avg. Asset Value at Risk / yr', value: fmtNum(avgAssetAtRisk,0), unit:'UGX bn', accent:'var(--neon-orange)', raw: Math.round(avgAssetAtRisk) },
         { label:'Total Funding Gap vs. Baseline', value: fmtNum(totalFundingGap,0), unit:'UGX bn', accent:'var(--neon-pink)', raw: Math.round(totalFundingGap) },
       ],
+      chart: () => chartCard({ title:'Programme Cost vs Funding Gap by Year', subtitle:'UGX billion', type:'bar',
+        labels: invYears.map(y=>y.financial_year), datasets:[
+          { label:'Programme Cost', data: invYears.map(y=>Math.round(y.programme_cost_bn_ushs)), backgroundColor:'#9d00ff', borderRadius:4 },
+          { label:'Funding Gap vs Baseline', data: invYears.map(y=>Math.round(y.funding_gap_vs_baseline_bn_ushs)), backgroundColor:'#ff2d78', borderRadius:4 },
+        ] }),
     },
   ];
 
@@ -144,6 +158,7 @@ RENDERERS.reports = async function(container){
 
     body.appendChild(head);
     body.appendChild(kpiGrid(stats));
+    if(tab.chart) body.appendChild(el('div',{style:'margin-top:16px;max-width:560px;'}, tab.chart()));
     body.appendChild(el('p',{class:'footnote'}, tab.source));
   }
 

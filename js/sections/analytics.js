@@ -114,63 +114,63 @@ RENDERERS.analytics = async function(container){
 
   const charts = [
     // ---- Network & Pavement ----
-    tagged(chartCard({ title:'Road Condition by Region', subtitle:'All 6 maintenance regions × Good/Fair/Poor, km (network.geojson field survey)',
+    tagged(chartCard({ title:'Road Condition by Region',
       type:'bar', stacked:true, labels:REGIONS, datasets:[
         {label:'Good', data:REGIONS.map(r=>Math.round(condByRegion[r].Good)), backgroundColor:'#00ff85', borderRadius:3},
         {label:'Fair', data:REGIONS.map(r=>Math.round(condByRegion[r].Fair)), backgroundColor:'#fff500', borderRadius:3},
         {label:'Poor', data:REGIONS.map(r=>Math.round(condByRegion[r].Poor)), backgroundColor:'#ff2d78', borderRadius:3},
       ] }), 'network'),
-    tagged(chartCard({ title:'Sealed vs Unsealed Length by Road Class', subtitle:'All 4 functional classes, km (maintenance-strategy workbook)',
+    tagged(chartCard({ title:'Sealed vs Unsealed Length by Road Class',
       type:'bar', stacked:true, labels: CLASS_ORDER.map(c=>DataStore.CLASS_LABELS[c]||c), datasets:[
         {label:'Bituminous (sealed)', data: nbc.map(x=>Math.round(x.bituminous_km)), backgroundColor:'#2979ff', borderRadius:3},
         {label:'Unsealed', data: nbc.map(x=>Math.round(x.unsealed_km)), backgroundColor:'#ff7a00', borderRadius:3},
       ] }), 'network'),
-    tagged(chartCard({ title:'VCI Rating Distribution', subtitle:'Visual Condition Index rating across all VCI-assessed links (maintenance-strategy workbook — a separate condition scale from the field-survey Condition used on Overview)',
+    tagged(chartCard({ title:'VCI Rating Distribution', subtitle:'Maintenance-strategy scale — distinct from the field-survey Condition above',
       type:'doughnut', labels:Object.keys(ms.vci_condition_distribution), datasets:[{ data:Object.values(ms.vci_condition_distribution), backgroundColor:NEON, borderWidth:0 }] }), 'network'),
-    tagged(chartCard({ title:'Network Length by Maintenance Station', subtitle:'All '+stationEntries.length+' maintenance stations, km', tall:true,
+    tagged(chartCard({ title:'Network Length by Maintenance Station', tall:true,
       type:'bar', indexAxis:'y', labels: stationEntries.map(e=>e[0]), datasets:[{ data: stationEntries.map(e=>Math.round(e[1])), backgroundColor:'#00e5ff', borderRadius:3 }] }), 'network'),
-    tagged(chartCard({ title:'Network Length by Surface Material', subtitle:'All '+surfaceEntries.length+' recorded surface materials, km (network.geojson field survey)',
+    tagged(chartCard({ title:'Network Length by Surface Material',
       type:'bar', indexAxis:'y', labels: surfaceEntries.map(e=>e[0]), datasets:[{ data: surfaceEntries.map(e=>Math.round(e[1])), backgroundColor:'#00ff85', borderRadius:3 }] }), 'network'),
 
     // ---- Traffic & Safety ----
-    tagged(chartCard({ title:'AADT Distribution', subtitle:'Count of links by 2026 modelled Average Annual Daily Traffic band ('+fmtNum(aadtVals.length)+' links with a live AADT figure)',
+    tagged(chartCard({ title:'AADT Distribution', subtitle:fmtNum(aadtVals.length)+' of '+fmtNum(feats.length)+' links carry a live 2026 AADT figure',
       type:'bar', labels:aadtLabels, datasets:[{ data:aadtCounts, backgroundColor:'#9d00ff', borderRadius:6 }] }), 'traffic'),
-    tagged(chartCard({ title:'Average Peak-Hour Speed by Road Class', subtitle:'All 4 functional classes, km/h',
+    tagged(chartCard({ title:'Average Peak-Hour Speed by Road Class', subtitle:'km/h',
       type:'bar', labels: CLASS_ORDER.map(c=>DataStore.CLASS_LABELS[c]||c), datasets:[{ data:velAvg, backgroundColor:'#ff00c8', borderRadius:6 }] }), 'traffic'),
-    tagged(chartCard({ title:'Road Safety Risk Band by Region', subtitle:'All 6 maintenance regions × Critical/Low risk band, km',
+    tagged(chartCard({ title:'Road Safety Risk Band by Region',
       type:'bar', stacked:true, labels:REGIONS, datasets:[
         {label:'Critical', data:REGIONS.map(r=>Math.round(bandByRegion[r].Critical)), backgroundColor:'#ff2d78', borderRadius:3},
         {label:'Low', data:REGIONS.map(r=>Math.round(bandByRegion[r].Low)), backgroundColor:'#00ff85', borderRadius:3},
       ] }), 'traffic'),
-    tagged(chartCard({ title:'Average Crash Rate by Region', subtitle:'All 6 maintenance regions, crashes per 100m-veh-km',
+    tagged(chartCard({ title:'Average Crash Rate by Region', subtitle:'Crashes per 100m-veh-km',
       type:'bar', labels:REGIONS, datasets:[{ data:crAvg, backgroundColor:'#ff7a00', borderRadius:6 }] }), 'traffic'),
-    tagged(chartCard({ title:'Heavy-Truck Share of Traffic by Region', subtitle:'Heavy trucks as % of AADT, all 6 maintenance regions (real per-link Aadt Heavy Trucks / Aadt 2026 Live)',
+    tagged(chartCard({ title:'Heavy-Truck Share of Traffic by Region', subtitle:'% of AADT (Aadt Heavy Trucks ÷ Aadt 2026 Live)',
       type:'bar', labels:REGIONS, datasets:[{ data:heavySharePct, backgroundColor:'#ff00c8', borderRadius:6 }] }), 'traffic'),
 
     // ---- Structures ----
-    tagged(chartCard({ title:'Bridge Condition Distribution', subtitle:'All '+fmtNum(ms.structures_summary.find(s=>s.structure_type==='Bridges').count)+' bridges in the structures register',
+    tagged(chartCard({ title:'Bridge Condition Distribution',
       type:'doughnut', labels:Object.keys(ms.bridge_condition_distribution), datasets:[{ data:Object.values(ms.bridge_condition_distribution), backgroundColor:NEON, borderWidth:0 }] }), 'structures'),
-    tagged(chartCard({ title:'Major Culvert Condition Distribution', subtitle:'All '+fmtNum(ms.structures_summary.find(s=>/major culvert/i.test(s.structure_type))?.count || ms.kpi_summary.total_major_culverts)+' major culverts in the structures register',
+    tagged(chartCard({ title:'Major Culvert Condition Distribution',
       type:'doughnut', labels:Object.keys(ms.culvert_condition_distribution), datasets:[{ data:Object.values(ms.culvert_condition_distribution), backgroundColor:NEON.slice().reverse(), borderWidth:0 }] }), 'structures'),
-    tagged(chartCard({ title:'Structures by Region: Bridges vs Major Culverts', subtitle:'All 6 maintenance regions, structure count (bridges and culverts are always counted separately, never merged)',
+    tagged(chartCard({ title:'Structures by Region: Bridges vs Major Culverts',
       type:'bar', stacked:true, labels:REGIONS, datasets:[
         {label:'Bridges', data:bridgesByRegion, backgroundColor:'#2979ff', borderRadius:3},
         {label:'Major Culverts', data:culvertsByRegion, backgroundColor:'#00e5ff', borderRadius:3},
       ] }), 'structures'),
 
     // ---- Investment & Priority ----
-    tagged(chartCard({ title:'Recommended Intervention Mix', subtitle:'All 7 intervention categories in the maintenance-strategy plan, network length in km',
+    tagged(chartCard({ title:'Recommended Intervention Mix', subtitle:'Network length, km',
       type:'bar', indexAxis:'y', labels:(ms.intervention_mix_summary||[]).map(x=>x.intervention), datasets:[{ data:(ms.intervention_mix_summary||[]).map(x=>Math.round(x.length_km)), backgroundColor:'#00ff85', borderRadius:4 }] }), 'investment'),
-    tagged(chartCard({ title:'Paved vs Unpaved Asset Value Trend', subtitle:'FY17/18 to FY25/26 (years with data), USD million', type:'line',
+    tagged(chartCard({ title:'Paved vs Unpaved Asset Value Trend', subtitle:'USD million', type:'line',
       labels: avtFY, datasets:[
         {label:'Paved', data:avtPaved, borderColor:'#2979ff', backgroundColor:'#2979ff', tension:0.25, spanGaps:true},
         {label:'Unpaved', data:avtUnpaved, borderColor:'#ff7a00', backgroundColor:'#ff7a00', tension:0.25, spanGaps:true},
       ] }), 'investment'),
-    tagged(chartCard({ title:'Priority Score Distribution', subtitle:'All 338 priority-ranked links, by real priority_score band (maintenance-strategy prioritisation model)',
+    tagged(chartCard({ title:'Priority Score Distribution',
       type:'bar', labels:scoreLabels, datasets:[{ data:scoreCounts, backgroundColor:'#fff500', borderRadius:6 }] }), 'investment'),
-    tagged(chartCard({ title:'Funding Gap vs Baseline by Year', subtitle:'FY26/27–FY30/31 programme years, UGX billion',
+    tagged(chartCard({ title:'Funding Gap vs Baseline by Year', subtitle:'UGX billion',
       type:'bar', labels: fyRows.map(y=>y.financial_year), datasets:[{ data: fyRows.map(y=>Math.round(y.funding_gap_vs_baseline_bn_ushs||0)), backgroundColor:'#ff2d78', borderRadius:6 }] }), 'investment'),
-    tagged(chartCard({ title:'Link Age vs Priority Score', subtitle:'All 338 priority-ranked links — older/higher-risk links generally score higher', type:'scatter',
+    tagged(chartCard({ title:'Link Age vs Priority Score', type:'scatter',
       labels: null, datasets:[{ label:'Links', data:scatterPts, backgroundColor:'#9d00ff' }] }), 'investment'),
   ];
 

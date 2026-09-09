@@ -90,7 +90,7 @@ RENDERERS.maintenance = async function(container){
       ],
       regionLabels.map(r => ({ region:r, ...regional[r], share: regional[r].total_km/kpi.total_network_km*100 }))
     ),
-    chartCard({ title:'Paved vs Unpaved by Region', subtitle:'All 6 maintenance regions, km (maintenance-strategy workbook)', type:'bar', stacked:true,
+    chartCard({ title:'Paved vs Unpaved by Region', type:'bar', stacked:true,
       labels: regionLabels,
       datasets:[
         { label:'Paved', data: regionLabels.map(r=>Math.round(regional[r].paved_km)), backgroundColor:'#2979ff', borderRadius:4 },
@@ -111,7 +111,7 @@ RENDERERS.maintenance = async function(container){
       ],
       byClass
     ),
-    chartCard({ title:'Network Length by Functional Class', subtitle:'Bituminous vs unsealed km per class (maintenance-strategy workbook)', type:'bar', stacked:true,
+    chartCard({ title:'Network Length by Functional Class', type:'bar', stacked:true,
       labels: byClass.map(c=>c.road_class),
       datasets:[
         { label:'Bituminous', data: byClass.map(c=>Math.round(c.bituminous_km)), backgroundColor:'#2979ff', borderRadius:4 },
@@ -123,7 +123,7 @@ RENDERERS.maintenance = async function(container){
   const vciCats = Object.keys(vci);
   const vciTotal = vciCats.reduce((s,k)=>s+vci[k],0);
   container.appendChild(sectionBlock('VCI Condition Distribution', 'Visual Condition Index rating across all assessed links — every category shown, including "Not assessed".', el('div',{class:'grid-2'},[
-    chartCard({ title:'Links by VCI Rating', subtitle:'Count of links per VCI condition category', type:'doughnut',
+    chartCard({ title:'Links by VCI Rating', type:'doughnut',
       labels: vciCats, datasets:[{ data: vciCats.map(k=>vci[k]), backgroundColor:NEON.slice(0,vciCats.length), borderWidth:0 }] }),
     miniTable(
       [
@@ -155,7 +155,7 @@ RENDERERS.maintenance = async function(container){
       ],
       invRows
     ),
-    chartCard({ title:'Programme Cost by Year', subtitle:'FY26/27–FY30/31, UGX billion — 5 real fiscal-year rows only', type:'bar',
+    chartCard({ title:'Programme Cost by Year', subtitle:'UGX billion', type:'bar',
       labels: invYears.map(y=>y.financial_year),
       datasets:[{ data: invYears.map(y=>Math.round(y.programme_cost_bn_ushs*10)/10), backgroundColor:'#9d00ff', borderRadius:6 }] }),
   ])));
@@ -171,7 +171,7 @@ RENDERERS.maintenance = async function(container){
       ],
       interventionMix
     ),
-    chartCard({ title:'Programme Cost by Intervention Type', subtitle:'UGX billion, by recommended intervention', type:'bar', indexAxis:'y',
+    chartCard({ title:'Programme Cost by Intervention Type', subtitle:'UGX billion', type:'bar', indexAxis:'y',
       labels: interventionMix.map(i=>i.intervention),
       datasets:[{ data: interventionMix.map(i=>Math.round(i.cost_bn_ushs*10)/10), backgroundColor:NEON[2], borderRadius:4 }] }),
   ])));

@@ -29,16 +29,16 @@ RENDERERS.overview = async function(container){
   const classData = classLabels.map(k=>Math.round(net.byClass[k]));
 
   container.appendChild(sectionBlock('Network at a glance', null, chartGrid([
-    chartCard({ title:'Road Condition (all assessed links)', subtitle:'Count of links by condition category', type:'doughnut',
+    chartCard({ title:'Road Condition (all assessed links)', type:'doughnut',
       labels:condLabels, datasets:[{ data:condData, backgroundColor:NEON.slice(0,condLabels.length), borderWidth:0 }] }),
-    chartCard({ title:'Network Length by Road Class', subtitle:'All 4 functional classes, km', type:'bar',
+    chartCard({ title:'Network Length by Road Class', type:'bar',
       labels: classLabels.map(c=>DataStore.CLASS_LABELS[c]||c), datasets:[{ data:classData, backgroundColor:'#00e5ff', borderRadius:6 }] }),
-    chartCard({ title:'Paved vs Unpaved Network by Region', subtitle:'All 6 maintenance regions, km', type:'bar', stacked:true,
+    chartCard({ title:'Paved vs Unpaved Network by Region', type:'bar', stacked:true,
       labels:regionLabels, datasets:[
         { label:'Paved', data:regionPaved, backgroundColor:'#2979ff', borderRadius:4 },
         { label:'Unpaved', data:regionUnpaved, backgroundColor:'#ff7a00', borderRadius:4 }
       ] }),
-    chartCard({ title:'Maintenance Investment Need by Year', subtitle:'FY26/27–FY30/31 programme cost, UGX billion', type:'bar',
+    chartCard({ title:'Maintenance Investment Need, FY26/27–FY30/31', subtitle:'UGX billion', type:'bar',
       labels: ms.investment_plan_annual.filter(y=>/^FY\d/.test(y.financial_year)).map(y=>y.financial_year),
       datasets:[{ data: ms.investment_plan_annual.filter(y=>/^FY\d/.test(y.financial_year)).map(y=>Math.round(y.programme_cost_bn_ushs)), backgroundColor:'#9d00ff', borderRadius:6 }] }),
   ])));

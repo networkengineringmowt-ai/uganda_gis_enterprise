@@ -146,9 +146,9 @@ RENDERERS.socioeconomic = async function(container){
     ));
 
     wrap.appendChild(sectionBlock('Forest reserve area by gazettement type', 'All gazettement categories in the register — no subset.', chartGrid([
-      chartCard({ title:'Reserve count by type', subtitle:'Count of named reserves, by gazettement type', type:'doughnut',
+      chartCard({ title:'Reserve count by type', type:'doughnut',
         labels: types, datasets:[{ data: types.map(t=>byTypeCount[t]), backgroundColor: types.map(t=>typeColor[t]||'#888'), borderWidth:0 }] }),
-      chartCard({ title:'Gazetted area by type', subtitle:'Hectares, summed from the Forest Department register', type:'bar',
+      chartCard({ title:'Gazetted area by type', subtitle:'Hectares', type:'bar',
         labels: types, datasets:[{ data: types.map(t=>Math.round(byTypeArea[t])), backgroundColor: types.map(t=>typeColor[t]||'#888'), borderRadius:6 }] }),
     ])));
 
@@ -200,9 +200,9 @@ RENDERERS.socioeconomic = async function(container){
     ));
 
     wrap.appendChild(sectionBlock('Protected area extent by category', 'All non-forest register categories — no subset.', chartGrid([
-      chartCard({ title:'Count by category', subtitle:'Number of gazetted units, by register category', type:'doughnut',
+      chartCard({ title:'Count by category', type:'doughnut',
         labels: cats, datasets:[{ data: cats.map(c=>byCatCount[c]), backgroundColor: cats.map(c=>catColor[c]), borderWidth:0 }] }),
-      chartCard({ title:'Area by category', subtitle:'Hectares, computed from polygon geometry', type:'bar',
+      chartCard({ title:'Area by category', subtitle:'Hectares', type:'bar',
         labels: cats, datasets:[{ data: cats.map(c=>Math.round(byCatArea[c])), backgroundColor: cats.map(c=>catColor[c]), borderRadius:6 }] }),
     ])));
 
@@ -257,9 +257,9 @@ RENDERERS.socioeconomic = async function(container){
     ));
 
     wrap.appendChild(sectionBlock('Wetland area by region and type', 'All regions and types recorded in the inventory — no subset.', chartGrid([
-      chartCard({ title:'Wetland area by inventory region', subtitle:'Hectares — wetland inventory’s own regional classification', type:'bar',
+      chartCard({ title:'Wetland area by inventory region', subtitle:'Hectares — inventory’s own regional classification, not maintenance regions', type:'bar',
         labels: regions, datasets:[{ data: regions.map(r=>Math.round(byRegion[r])), backgroundColor:'#00e5ff', borderRadius:6 }] }),
-      chartCard({ title:'Wetland area by type', subtitle:'Hectares, all recorded wetland types', type:'bar', indexAxis:'y',
+      chartCard({ title:'Wetland area by type', subtitle:'Hectares', type:'bar', indexAxis:'y',
         labels: types, datasets:[{ data: types.map(t=>Math.round(byType[t])), backgroundColor:NEON.slice(0,types.length), borderRadius:6 }] }),
     ])));
 
@@ -317,9 +317,9 @@ RENDERERS.socioeconomic = async function(container){
     ));
 
     wrap.appendChild(sectionBlock('Investment corridors by region and component', 'All 6 maintenance regions for OPRC; all NDP IV components — no subset.', chartGrid([
-      chartCard({ title:'OPRC scoped length by region', subtitle:'All 6 maintenance regions, km', type:'bar',
+      chartCard({ title:'OPRC scoped length by region', subtitle:'km', type:'bar',
         labels: DataStore.REGIONS, datasets:[{ data: DataStore.REGIONS.map(r=>Math.round(oprcByRegion[r])), backgroundColor:'#00e5ff', borderRadius:6 }] }),
-      chartCard({ title:'NDP IV projects by component', subtitle:'Count of project-tagged links, by investment component', type:'bar', indexAxis:'y',
+      chartCard({ title:'NDP IV projects by component', type:'bar', indexAxis:'y',
         labels: components, datasets:[{ data: components.map(c=>ndpivByComponent[c]), backgroundColor:NEON.slice(0,components.length), borderRadius:6 }] }),
     ])));
 
@@ -387,9 +387,9 @@ RENDERERS.socioeconomic = async function(container){
     ));
 
     wrap.appendChild(sectionBlock('Towns and airport classification', 'Full distribution recorded in each source register — no subset.', chartGrid([
-      chartCard({ title:'Towns by classification', subtitle:'As recorded in the town gazetteer', type:'bar',
+      chartCard({ title:'Towns by classification', type:'bar',
         labels: classes, datasets:[{ data: classes.map(c=>byCls[c]), backgroundColor:'#00e5ff', borderRadius:6 }] }),
-      chartCard({ title:'Airports by category', subtitle:'International airports vs. airstrips', type:'doughnut',
+      chartCard({ title:'Airports by category', type:'doughnut',
         labels: Object.keys(byAirportCat), datasets:[{ data: Object.values(byAirportCat), backgroundColor:['#00ff85','#ff7a00'], borderWidth:0 }] }),
     ])));
 
