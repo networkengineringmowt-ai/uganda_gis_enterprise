@@ -4,7 +4,7 @@ RENDERERS.overview = async function(container){
 
   container.appendChild(pageHead(
     'National Road Network Overview',
-    'Live figures computed directly from the platform’s GIS road-network inventory and the FY2025/26 MoWT/UNRA maintenance-strategy workbooks.',
+    'Live figures computed directly from the platform’s GIS road-network inventory and the FY2025/26 MoWT maintenance-strategy workbooks.',
     net.linkCount + ' road links · 6 regions'
   ));
 
@@ -17,7 +17,7 @@ RENDERERS.overview = async function(container){
     { label:'Major Culverts', value: fmtNum(ms.kpi_summary.total_major_culverts), accent:'var(--neon-purple)' },
     { label:'DUCAR District Network', value: fmtNum(135640.8,0), unit:'km', accent:'var(--neon-green)' },
   ]));
-  container.appendChild(el('p',{class:'footnote'}, net.source + ' Bridges and culverts are reported from the MoWT/UNRA 2026 maintenance-strategy structures register — see Bridges & Culverts for full, separate registers.'));
+  container.appendChild(el('p',{class:'footnote'}, net.source + ' Bridges and culverts are reported from the MoWT 2026 maintenance-strategy structures register — see Bridges & Culverts for full, separate registers.'));
 
   // ---- Condition + region charts ----
   const condLabels = Object.keys(net.byCondition);
@@ -51,6 +51,8 @@ RENDERERS.overview = async function(container){
     { t:'Maintenance programme covers 338 priority links', d:(()=>{ const yrs = ms.investment_plan_annual.filter(y=>/^FY\d/.test(y.financial_year)); const avg = yrs.reduce((s,y)=>s+y.asset_value_at_risk_bn_ushs,0)/yrs.length; return `The FY26/27–FY30/31 investment plan schedules 338 priority links against an asset value at risk averaging UGX ${fmtNum(avg,0)} bn/yr.`; })(), a:'var(--neon-blue)'},
     { t:'Total road & structure asset value', d:`The classified network, bridges and major culverts together are valued at USD ${fmtNum(ms.kpi_summary.total_asset_value_mn_usd,0)} million per the FY2025/26 asset-values workbook.`, a:'var(--neon-green)'},
     { t:(()=>{ const poor = ms.vci_condition_distribution.Poor + ms.vci_condition_distribution['Very Poor']; return fmtNum(poor,0)+' links need priority attention'; })(), d:(()=>{ const assessed = Object.values(ms.vci_condition_distribution).reduce((a,b)=>a+b,0); const poor = ms.vci_condition_distribution.Poor + ms.vci_condition_distribution['Very Poor']; return `Across ${fmtNum(assessed,0)} VCI-assessed links, ${ms.vci_condition_distribution.Poor} are rated Poor and ${ms.vci_condition_distribution['Very Poor']} Very Poor — together ${(poor/assessed*100).toFixed(0)}% of assessed links.`; })(), a:'var(--neon-pink)'},
+    { t:'Regional paving gap', d:(()=>{ const withPct = regionLabels.map(r=>({ r, pct: net.byRegion[r].paved/net.byRegion[r].total*100 })).sort((a,b)=>b.pct-a.pct); const best=withPct[0], worst=withPct[withPct.length-1]; return `${best.r} is the most-paved region at ${best.pct.toFixed(1)}%, versus ${worst.r} at just ${worst.pct.toFixed(1)}% — a ${(best.pct-worst.pct).toFixed(0)}-point gap in surfacing between regions.`; })(), a:'var(--neon-yellow)'},
+    { t:'Average link length', d:`${fmtNum(net.linkCount)} classified links average ${(net.totalKm/net.linkCount).toFixed(1)} km each — computed directly from network.geojson, not a published figure.`, a:'var(--neon-magenta)'},
   ];
   const findGrid = el('div',{class:'grid-3'});
   findings.forEach(f=>{
@@ -61,6 +63,6 @@ RENDERERS.overview = async function(container){
   container.appendChild(sectionBlock('What the data shows', 'A curated set of genuinely distinct findings — see Analytics & Insights for the full chart library.', findGrid));
 
   container.appendChild(el('p',{class:'footnote'},
-    'Two independent, real MoWT/UNRA source systems feed this platform: the GIS road-network inventory (network.geojson, '+net.linkCount+' links, '+fmtNum(net.totalKm,0)+' km) and the separately-maintained maintenance-strategy planning workbooks ('+fmtNum(ms.kpi_summary.total_network_km,0)+' km assessed, 2026 cycle). Their totals differ slightly because they are captured at different times from different systems — each figure on this site is labelled with its own source rather than forced to a single, falsely-precise number.'
+    'Two independent, real MoWT source systems feed this platform: the GIS road-network inventory (network.geojson, '+net.linkCount+' links, '+fmtNum(net.totalKm,0)+' km) and the separately-maintained maintenance-strategy planning workbooks ('+fmtNum(ms.kpi_summary.total_network_km,0)+' km assessed, 2026 cycle). Their totals differ slightly because they are captured at different times from different systems — each figure on this site is labelled with its own source rather than forced to a single, falsely-precise number.'
   ));
 };

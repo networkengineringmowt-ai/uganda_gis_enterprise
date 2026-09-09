@@ -14,17 +14,13 @@ RENDERERS.map = async function(container){
     '21 reference layers'
   ));
 
-  container.appendChild(el('p',{class:'callout'},
-    'This map renders the real national road network plus 20 additional real GeoJSON reference layers — structures, administrative boundaries, land/environment and monitoring datasets. Nothing is placeholder or simulated; two large layers (DUCAR Road Network, Parishes) are only fetched the first time you switch them on.'
-  ));
-
   // ---------------------------------------------------------------- layout
   const wrap = el('div',{style:'display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap-reverse;'});
   const mapCol = el('div',{style:'flex:3 1 620px;min-width:340px;'});
   const mapDiv = el('div',{class:'map-shell', id:'gis-national-map'});
   mapCol.appendChild(mapDiv);
   mapCol.appendChild(el('p',{class:'footnote'},
-    'Basemap tiles courtesy of Esri and OpenStreetMap contributors. Overlay data: MoWT/UNRA GIS road-network inventory and the platform’s reference GeoJSON layers (bridges, culverts, districts, protected areas and related registers).'
+    'Basemap tiles courtesy of Esri and OpenStreetMap contributors. Overlay data: MoWT GIS road-network inventory and the platform’s reference GeoJSON layers (bridges, culverts, districts, protected areas and related registers).'
   ));
 
   const panel = el('div',{class:'card card-pad', style:'flex:1 1 300px;max-width:340px;max-height:640px;overflow-y:auto;'});

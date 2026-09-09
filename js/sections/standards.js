@@ -9,7 +9,7 @@ RENDERERS.standards = async function(container){
   container.innerHTML = '';
   container.appendChild(pageHead(
     'Standards & Data Model',
-    'The real engineering-standards thresholds MoWT/UNRA maintenance decisions are measured against, and the platform’s underlying data pipeline.',
+    'The real engineering-standards thresholds MoWT maintenance decisions are measured against, and the platform’s underlying data pipeline.',
     '4 verified standards'
   ));
 
@@ -157,7 +157,7 @@ RENDERERS.standards = async function(container){
     host.innerHTML = '';
     host.appendChild(sectionBlock(
       'Engineering Reference Standards',
-      'Threshold bands and recommended interventions cited directly from the manuals governing MoWT/UNRA maintenance decisions.',
+      'Threshold bands and recommended interventions cited directly from the manuals governing MoWT maintenance decisions.',
       buildStandardsGrid()
     ));
   }

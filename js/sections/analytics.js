@@ -10,8 +10,8 @@ RENDERERS.analytics = async function(container){
 
   container.appendChild(pageHead(
     'Analytics & Insights',
-    'The single canonical chart library for this platform — real distributions computed from the GIS road-network inventory and the FY2025/26 MoWT/UNRA maintenance-strategy workbooks. Top-line KPIs live on Overview; this page goes deeper.',
-    '16 charts · 4 categories · 10 findings'
+    'The single canonical chart library for this platform — real distributions computed from the GIS road-network inventory and the FY2025/26 MoWT maintenance-strategy workbooks. Top-line KPIs live on Overview; this page goes deeper.',
+    '18 charts · 4 categories · 12 findings'
   ));
 
   /* ============================================================
@@ -71,6 +71,17 @@ RENDERERS.analytics = async function(container){
   feats.forEach(p=>{ const s = p['Maintena 2']||'Unassigned'; stationKm[s] = (stationKm[s]||0) + (p['Length Km']||0); });
   const stationEntries = Object.entries(stationKm).sort((a,b)=> a[0].localeCompare(b[0]));
 
+  // Surface material breakdown, km (real field, not yet surfaced anywhere else on the platform)
+  const surfaceEntries = Object.entries(net.bySurface).sort((a,b)=> b[1]-a[1]);
+
+  // Heavy-truck share of AADT by region — real per-link fields (Aadt Heavy Trucks / Aadt 2026 Live)
+  const heavySum = {}, heavyTotal = {}; REGIONS.forEach(r=>{ heavySum[r]=0; heavyTotal[r]=0; });
+  feats.forEach(p=>{
+    const r = p['Region'], aadt = p['Aadt 2026 Live'], heavy = p['Aadt Heavy Trucks'];
+    if(heavySum[r]!==undefined && aadt && heavy!==null && heavy!==undefined){ heavySum[r]+=heavy; heavyTotal[r]+=aadt; }
+  });
+  const heavySharePct = REGIONS.map(r=> heavyTotal[r] ? +(heavySum[r]/heavyTotal[r]*100).toFixed(1) : 0);
+
   // Priority-score histogram + age vs priority scatter (link_investment_priority — 338 real rows)
   const lip = detail.link_investment_priority || [];
   const scoreVals = lip.map(r=>r.priority_score).filter(v=>v!==null && v!==undefined);
@@ -118,6 +129,8 @@ RENDERERS.analytics = async function(container){
       type:'doughnut', labels:Object.keys(ms.vci_condition_distribution), datasets:[{ data:Object.values(ms.vci_condition_distribution), backgroundColor:NEON, borderWidth:0 }] }), 'network'),
     tagged(chartCard({ title:'Network Length by Maintenance Station', subtitle:'All '+stationEntries.length+' maintenance stations, km', tall:true,
       type:'bar', indexAxis:'y', labels: stationEntries.map(e=>e[0]), datasets:[{ data: stationEntries.map(e=>Math.round(e[1])), backgroundColor:'#00e5ff', borderRadius:3 }] }), 'network'),
+    tagged(chartCard({ title:'Network Length by Surface Material', subtitle:'All '+surfaceEntries.length+' recorded surface materials, km (network.geojson field survey)',
+      type:'bar', indexAxis:'y', labels: surfaceEntries.map(e=>e[0]), datasets:[{ data: surfaceEntries.map(e=>Math.round(e[1])), backgroundColor:'#00ff85', borderRadius:3 }] }), 'network'),
 
     // ---- Traffic & Safety ----
     tagged(chartCard({ title:'AADT Distribution', subtitle:'Count of links by 2026 modelled Average Annual Daily Traffic band ('+fmtNum(aadtVals.length)+' links with a live AADT figure)',
@@ -131,6 +144,8 @@ RENDERERS.analytics = async function(container){
       ] }), 'traffic'),
     tagged(chartCard({ title:'Average Crash Rate by Region', subtitle:'All 6 maintenance regions, crashes per 100m-veh-km',
       type:'bar', labels:REGIONS, datasets:[{ data:crAvg, backgroundColor:'#ff7a00', borderRadius:6 }] }), 'traffic'),
+    tagged(chartCard({ title:'Heavy-Truck Share of Traffic by Region', subtitle:'Heavy trucks as % of AADT, all 6 maintenance regions (real per-link Aadt Heavy Trucks / Aadt 2026 Live)',
+      type:'bar', labels:REGIONS, datasets:[{ data:heavySharePct, backgroundColor:'#ff00c8', borderRadius:6 }] }), 'traffic'),
 
     // ---- Structures ----
     tagged(chartCard({ title:'Bridge Condition Distribution', subtitle:'All '+fmtNum(ms.structures_summary.find(s=>s.structure_type==='Bridges').count)+' bridges in the structures register',
@@ -185,7 +200,7 @@ RENDERERS.analytics = async function(container){
 
   /* ============================================================
      Priority Ranking Explorer — real, paginated, full 338-row set.
-     priority_score is a genuine per-link output of the MoWT/UNRA
+     priority_score is a genuine per-link output of the MoWT
      prioritisation model (verified non-tied: sample scores 77.7,
      100.9, 106.1, 104.5, 85.6, 82.4, 86.3, 81.3, 81.7 across the
      first 10 rows) — not a fabricated "live calculator".
@@ -249,6 +264,13 @@ RENDERERS.analytics = async function(container){
 
   const p1Count = lip.filter(r=>r.priority_band==='Priority 1').length;
 
+  const topSurface = surfaceEntries[0];
+  const heaviestTruckRegionIdx = heavySharePct.reduce((iMax,v,i,arr)=> v>arr[iMax]?i:iMax, 0);
+
+  const confVals = feats.map(p=>p['Condition Confidence Pct']).filter(v=>v!==null && v!==undefined);
+  const avgConfidence = confVals.reduce((s,v)=>s+v,0) / confVals.length;
+  const lowConfCount = confVals.filter(v=>v<70).length;
+
   const findings = [
     { t:'Very little of the network is newly built', d:`Only ${(since2020Km/totalKm*100).toFixed(1)}% of classified network length (${fmtNum(since2020Km,0)} km) carries a completion year of 2020 or later — most of the network predates the current maintenance-strategy cycle.`, a:'var(--neon-cyan)' },
     { t:`${highestAadtRegion} region carries the heaviest average traffic loading`, d:`${highestAadtRegion} links average ${fmtNum(aadtByRegionAvg[highestAadtRegion],0)} vehicles/day (2026 modelled AADT), against ${fmtNum(aadtByRegionAvg[lowestAadtRegion],0)} in ${lowestAadtRegion}, the lightest-loaded region.`, a:'var(--neon-purple)' },
@@ -260,6 +282,9 @@ RENDERERS.analytics = async function(container){
     { t:`The 5-year investment plan carries a UGX ${fmtNum(fundingGapSum,0)} billion funding gap`, d:`Summed across the FY26/27–FY30/31 programme years, the funding gap against baseline financing totals UGX ${fmtNum(fundingGapSum,0)} billion.`, a:'var(--neon-yellow)' },
     { t:`${highestCrashRegion} region has the highest average crash rate`, d:`${highestCrashRegion} averages ${fmtNum(crAvg[REGIONS.indexOf(highestCrashRegion)],1)} crashes per 100m-veh-km, the highest of all 6 maintenance regions.`, a:'var(--neon-orange)' },
     { t:`${fmtNum(p1Count)} links are rated Priority 1, the most urgent tier`, d:`${(p1Count/lip.length*100).toFixed(0)}% of the 338 priority-ranked links (${fmtNum(p1Count)} links) fall in the Priority 1 band of the investment-priority model.`, a:'var(--neon-purple)' },
+    { t:`${topSurface[0]} is the dominant surface material`, d:`${fmtNum(topSurface[1],0)} km (${(topSurface[1]/totalKm*100).toFixed(0)}% of the classified network) is recorded as ${topSurface[0]} surface — the single largest of ${surfaceEntries.length} recorded materials.`, a:'var(--neon-cyan)' },
+    { t:`${REGIONS[heaviestTruckRegionIdx]} carries the heaviest freight-truck share`, d:`Heavy trucks make up ${heavySharePct[heaviestTruckRegionIdx]}% of AADT on ${REGIONS[heaviestTruckRegionIdx]} region's links, the highest heavy-vehicle share of any region — a proxy for freight-corridor loading and pavement-fatigue risk.`, a:'var(--neon-green)' },
+    { t:`Mean condition-rating confidence is ${avgConfidence.toFixed(0)}%`, d:`Across ${fmtNum(confVals.length)} field-surveyed links, ${fmtNum(lowConfCount)} (${(lowConfCount/confVals.length*100).toFixed(0)}%) carry a recorded condition confidence below 70% — flagged here rather than treated as equally certain as the rest.`, a:'var(--neon-pink)' },
   ];
   const findGrid = el('div',{class:'grid-3'});
   findings.forEach(f=>{
@@ -267,9 +292,9 @@ RENDERERS.analytics = async function(container){
       el('h3',{}, f.t), el('p',{class:'muted', style:'margin-top:6px;'}, f.d)
     ]));
   });
-  container.appendChild(sectionBlock('What the deeper data shows', 'Ten additional findings, computed live from this page’s data — distinct from the Overview summary.', findGrid));
+  container.appendChild(sectionBlock('What the deeper data shows', 'Twelve additional findings, computed live from this page’s data — distinct from the Overview summary.', findGrid));
 
   container.appendChild(el('p',{class:'footnote'},
-    net.source + ' Maintenance-strategy figures are drawn from the MoWT/UNRA FY2025/26 maintenance-strategy workbooks. Where the two source systems describe similar-sounding totals differently, each figure keeps its own source rather than being merged into one number — see the Overview footnote for detail.'
+    net.source + ' Maintenance-strategy figures are drawn from the MoWT FY2025/26 maintenance-strategy workbooks. Where the two source systems describe similar-sounding totals differently, each figure keeps its own source rather than being merged into one number — see the Overview footnote for detail.'
   ));
 };

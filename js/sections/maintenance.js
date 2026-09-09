@@ -48,7 +48,7 @@ RENDERERS.maintenance = async function(container){
 
   container.appendChild(pageHead(
     'Maintenance & Condition',
-    'The FY2025/26 MoWT/UNRA maintenance-strategy plan for the classified road network — condition, 5-year investment programme, intervention mix, and the full priority-ranked link register. Bridges and major culverts are reported separately in Bridges & Culverts.',
+    'The FY2025/26 MoWT maintenance-strategy plan for the classified road network — condition, 5-year investment programme, intervention mix, and the full priority-ranked link register. Bridges and major culverts are reported separately in Bridges & Culverts.',
     fmtNum(kpi.total_network_km,0)+' km assessed · FY26/27–FY30/31 plan'
   ));
 
@@ -60,7 +60,22 @@ RENDERERS.maintenance = async function(container){
     { label:'Links in Strategy Register', value: fmtNum(detail.road_links.length), accent:'var(--neon-purple)' },
     { label:'Priority-Planned Links', value: fmtNum(priorityLinks.length), accent:'var(--neon-green)', delta:'FY26/27–FY30/31 programme' },
   ]));
-  container.appendChild(el('p',{class:'footnote'}, 'MoWT/UNRA maintenance-strategy planning workbooks, FY2025/26 cycle. Figures cover the ROAD network only — see Bridges & Culverts for the 521-bridge and 451-culvert registers.'));
+  container.appendChild(el('p',{class:'footnote'}, 'MoWT maintenance-strategy planning workbooks, FY2025/26 cycle. Figures cover the ROAD network only — see Bridges & Culverts for the 521-bridge and 451-culvert registers.'));
+
+  // ---- Derived insight strip (computed from the same real data above — no new source) ----
+  const costliestIntervention = interventionMix.slice().sort((a,b)=>b.cost_bn_ushs-a.cost_bn_ushs)[0];
+  const totalFundingGap = invYears.reduce((s,y)=>s+y.funding_gap_vs_baseline_bn_ushs,0);
+  const insightGrid = el('div',{class:'grid-3'});
+  [
+    { t:'5-year funding gap', d:`The FY26/27–FY30/31 programme carries a funding gap of ${ughsBn(totalFundingGap)} against baseline across all 5 years combined.`, a:'var(--neon-pink)' },
+    { t:'Top-ranked priority link', d:`${esc(priorityLinks[0].link_name)} (${esc(priorityLinks[0].road_no)}) ranks #1 of 338, scheduled ${esc(priorityLinks[0].scheduled_fy)}, priority score ${fmtNum(priorityLinks[0].priority_score,1)}.`, a:'var(--neon-cyan)' },
+    { t:'Costliest intervention type', d:`${esc(costliestIntervention.intervention)} carries the largest programme cost at ${ughsBn(costliestIntervention.cost_bn_ushs)} across ${fmtNum(costliestIntervention.links_count)} links.`, a:'var(--neon-orange)' },
+  ].forEach(f=>{
+    insightGrid.appendChild(el('div',{class:'card card-pad hoverable', style:`border-left:4px solid ${f.a}`},[
+      el('h3',{}, f.t), el('p',{class:'muted', style:'margin-top:6px;'}, f.d)
+    ]));
+  });
+  container.appendChild(insightGrid);
 
   // ---- Network by Region ----
   const regionLabels = DataStore.REGIONS;
@@ -198,6 +213,6 @@ RENDERERS.maintenance = async function(container){
   })));
 
   container.appendChild(el('p',{class:'footnote'},
-    'Source: MoWT/UNRA maintenance-strategy planning workbooks, FY2025/26 cycle — network condition (VCI), the 5-year investment priority plan, intervention mix, and unit-rate benchmarks above. This page covers routine and periodic road MAINTENANCE funding only; new-construction capital investment (IBP/PIP) is reported separately in the Investment Plan section. Bridges and major culverts are always reported as their own registers — see Bridges & Culverts.'
+    'Source: MoWT maintenance-strategy planning workbooks, FY2025/26 cycle — network condition (VCI), the 5-year investment priority plan, intervention mix, and unit-rate benchmarks above. This page covers routine and periodic road MAINTENANCE funding only; new-construction capital investment (IBP/PIP) is reported separately in the Investment Plan section. Bridges and major culverts are always reported as their own registers — see Bridges & Culverts.'
   ));
 };

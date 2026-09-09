@@ -6,10 +6,6 @@ RENDERERS.socioeconomic = async function(container){
     'Economic geography and climate-sensitive land use — protected areas, forest reserves, wetlands, and planned investment corridors — overlaid on the road network for road-investment planning.'
   ));
 
-  container.appendChild(el('div', {class:'callout'},
-    'This section covers the economic-geography and climate-sensitive GIS layers this platform actually publishes: protected areas, forest reserves, wetlands, planned NDP IV / OPRC investment corridors, and towns & access infrastructure (airports, ferry crossings) — each shown separately with its own real schema, never merged into one generic table. No verified GIS layers for mineral/oil concessions, industrial parks, the power grid, schools, health facilities or agro-processing sites exist in the platform’s current data catalogue, so those categories are omitted rather than filled with placeholder content.'
-  ));
-
   const body = el('div', {});
   container.appendChild(body);
   body.appendChild(loadingBlock('Loading protected-area, forest, wetland, investment-corridor and access datasets…'));
@@ -317,7 +313,7 @@ RENDERERS.socioeconomic = async function(container){
       { label:'NDP IV High-Priority Links', value: fmtNum(ndpivHigh), accent:'var(--neon-orange)', delta:(ndpivHigh/ndpivRows.length*100).toFixed(0)+'% of projects' },
     ]));
     wrap.appendChild(el('p', {class:'footnote'},
-      'Source: MoWT/UNRA FY2025/26 NDP IV investment master list ('+fmtNum(ndpivRows.length)+' project-tagged road links) and Output- and Performance-based Road Contracts (OPRC) scoping register ('+fmtNum(oprcRows.length)+' links across 6 regional lots). Both are real planning-stage overlays on the road-link network — link names are decoded from the source register, not shown as raw link codes.'
+      'Source: MoWT FY2025/26 NDP IV investment master list ('+fmtNum(ndpivRows.length)+' project-tagged road links) and Output- and Performance-based Road Contracts (OPRC) scoping register ('+fmtNum(oprcRows.length)+' links across 6 regional lots). Both are real planning-stage overlays on the road-link network — link names are decoded from the source register, not shown as raw link codes.'
     ));
 
     wrap.appendChild(sectionBlock('Investment corridors by region and component', 'All 6 maintenance regions for OPRC; all NDP IV components — no subset.', chartGrid([

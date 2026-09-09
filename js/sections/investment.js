@@ -71,16 +71,9 @@ RENDERERS.investment = async function(container){
     // ---- institutional / publishing-cycle context, computed from real data ----
     const first = years[0], latest = years[years.length-1];
     const firstS = summary[first], latestS = summary[latest];
-    wrap.appendChild(el('div',{class:'callout', style:'margin-bottom:18px;'}, [
-      el('p',{}, [
-        el('strong',{},'Two things to read correctly in this data: '),
-        `The Public Investment Plan is not republished with full project detail every fiscal year — the ${years.length} cycles shown here (${years.join(', ')}) are the ones with project-level data available on record; the gaps between them reflect real PIP publishing cycles, not missing data.`
-      ]),
-      el('p',{style:'margin-top:8px;'}, [
-        el('strong',{},'Implementing agency shifts over time: '),
-        `In ${first}, ${fmtNum(firstS.unra_projects)} of that year's ${fmtNum(firstS.road_projects+firstS.bridge_major_culvert_projects)} listed projects were attributed to UNRA. By ${latest}, ${fmtNum(latestS.unra_projects)} were attributed to UNRA and ${fmtNum(latestS.mowt_projects)} to MoWT. This is not a data error — UNRA's national road-development and new-construction mandate was progressively absorbed back into the Ministry of Works and Transport over this period, so the same category of capital road project is credited to a different implementing agency depending on which institutional arrangement was in force when that year's Plan was published.`
-      ])
-    ]));
+    wrap.appendChild(el('p',{class:'footnote', style:'margin-bottom:18px;'},
+      `The Public Investment Plan is not republished with full project detail every fiscal year — the ${years.length} cycles shown here (${years.join(', ')}) are the ones with project-level data available on record; the gaps reflect real PIP publishing cycles, not missing data. Implementing agency also shifts over time: in ${first}, ${fmtNum(firstS.unra_projects)} of that year's ${fmtNum(firstS.road_projects+firstS.bridge_major_culvert_projects)} listed projects were attributed to UNRA; by ${latest}, ${fmtNum(latestS.unra_projects)} were attributed to UNRA and ${fmtNum(latestS.mowt_projects)} to MoWT. This reflects UNRA's real dissolution (Dec 2024) and the absorption of its road-development mandate into MoWT's new National Roads Department, not a data error — the same category of capital project is credited to whichever agency was in force when that year's Plan was published.`
+    ));
 
     // ---- trend charts across all real years ----
     const trendYears = years;
@@ -196,10 +189,9 @@ RENDERERS.investment = async function(container){
   function buildPimTab(){
     const wrap = el('div',{});
 
-    wrap.appendChild(el('div',{class:'callout warn'}, [
-      el('strong',{},'Illustrative planning tool, not project-level appraisal data. '),
-      'No real per-project EIRR/BCR/NPV appraisal dataset exists in the data available to this platform. This calculator instead demonstrates the standard HDM-4-style logic used in pavement investment planning — a documented, simplified deterioration model you can drive with your own assumptions below. It does not represent any specific road, project or approved budget.'
-    ]));
+    wrap.appendChild(el('p',{class:'footnote'},
+      'Illustrative planning tool, not project-level appraisal data. No real per-project EIRR/BCR/NPV appraisal dataset exists in the data available to this platform. This calculator instead demonstrates the standard HDM-4-style logic used in pavement investment planning — a documented, simplified deterioration model you can drive with your own assumptions below. It does not represent any specific road, project or approved budget.'
+    ));
 
     // ---- controls ----
     const state = { vci: 75, growth: 4, horizon: 20 };

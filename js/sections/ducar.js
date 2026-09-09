@@ -54,11 +54,11 @@ RENDERERS.ducar = async function(container){
     { label: 'Poor Condition', value: fmtNum(poorKm, 0), unit: 'km', accent: 'var(--neon-pink)', delta: (poorKm/conditionAssessedKm*100).toFixed(1)+'% of assessed' },
   ]));
   container.appendChild(el('p', { class: 'footnote' },
-    'DUCAR (District, Urban, Community Access Roads) totals computed live from the MoWT/UNRA DUCAR district-level condition survey, all '+fmtNum(districts.length)+' districts ('+fmtNum(distKm,0)+' km district + '+fmtNum(urbKm,0)+' km urban + '+fmtNum(commKm,0)+' km community access roads). This is a separately-maintained source from the national road-network inventory shown on Overview — the two are not combined. The digitized DUCAR road-link map layer used in Network Explorer contains '+fmtNum(ducarLinks.length)+' mapped link features totalling '+fmtNum(ducarLinksKm,0)+' km — a partial, digitized subset used for mapping, not a substitute for the district condition-survey total above; the two figures are reported separately, not reconciled to a single number.'
+    'DUCAR (District, Urban, Community Access Roads) totals computed live from the MoWT DUCAR district-level condition survey, all '+fmtNum(districts.length)+' districts ('+fmtNum(distKm,0)+' km district + '+fmtNum(urbKm,0)+' km urban + '+fmtNum(commKm,0)+' km community access roads). This is a separately-maintained source from the national road-network inventory shown on Overview — the two are not combined. The digitized DUCAR road-link map layer used in Network Explorer contains '+fmtNum(ducarLinks.length)+' mapped link features totalling '+fmtNum(ducarLinksKm,0)+' km — a partial, digitized subset used for mapping, not a substitute for the district condition-survey total above; the two figures are reported separately, not reconciled to a single number.'
   ));
 
   // ---- Charts: condition distribution + network composition ----
-  container.appendChild(sectionBlock('DUCAR network composition', 'Computed from the MoWT/UNRA district-level condition survey, all 135 districts.', chartGrid([
+  container.appendChild(sectionBlock('DUCAR network composition', 'Computed from the MoWT district-level condition survey, all 135 districts.', chartGrid([
     chartCard({
       title: 'Condition Distribution', subtitle: 'DUCAR network km by condition band, all districts',
       type: 'doughnut', labels: ['Good', 'Fair', 'Poor'],
@@ -162,7 +162,7 @@ RENDERERS.ducar = async function(container){
 
   // -----------------------------------------------------------------------
   // Honest traffic-data disclosure. No named DUCAR traffic-count-station
-  // history exists in the platform's data — MoWT/UNRA's traffic-count
+  // history exists in the platform's data — MoWT's traffic-count
   // programme (geo/traffic_count_stations.geojson) covers only the
   // classified national road network. We say so plainly and show that real
   // national-network station data for illustration, rather than fabricating
@@ -187,12 +187,8 @@ RENDERERS.ducar = async function(container){
   const avgAadt = stationRows.reduce((s, r) => s + r.aadt, 0) / stationRows.length;
 
   const trafficBlock = el('div', {});
-  trafficBlock.appendChild(el('div', { class: 'callout warn' }, [
-    el('strong', {}, 'What this does and does not show: '),
-    'MoWT/UNRA\'s traffic-count-station programme currently instruments only the classified national road network — there is no equivalent named, geolocated traffic-count-station register for District, Urban or Community Access roads in the platform\'s data. The ' + fmtNum(stationRows.length) + ' stations below are real, current-year (2026) counts on national road links, shown here for illustration of the counting method only. They describe the national network, not the DUCAR network, and are not projected, extrapolated or averaged onto the DUCAR totals above. Only a single count year is available per station in this dataset, so no multi-year growth trend, trend line or statistical confidence figure (e.g. R²) is presented — none has been computed.'
-  ]));
-  trafficBlock.appendChild(el('p', { class: 'muted', style: 'margin:12px 0;' },
-    fmtNum(stationRows.length) + ' stations with a matched current AADT figure · mean ' + fmtNum(avgAadt, 0) + ' vehicles/day across these stations.'));
+  trafficBlock.appendChild(el('p', { class: 'muted', style: 'margin:0 0 12px;' },
+    fmtNum(stationRows.length) + ' stations with a matched current AADT figure · mean ' + fmtNum(avgAadt, 0) + ' vehicles/day across these stations. These are national-network counts (MoWT\'s traffic-count programme covers only the classified national network, not DUCAR roads) shown for illustration — not projected, extrapolated or averaged onto the DUCAR totals above.'));
   trafficBlock.appendChild(dataTable({
     caption: 'traffic count stations',
     pageSize: 25,
