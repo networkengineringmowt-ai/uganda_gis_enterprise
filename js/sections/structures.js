@@ -70,7 +70,15 @@ function buildStructureView(cfg){
     (missingCoords > 0 || badCoords > 0 ? ' omitted from the map below (shown in the table with their recorded values).' : ' All records carry mapped coordinates.')
   ));
 
-  // ---- 2. map ----
+  // ---- 2. condition-distribution chart ----
+  node.appendChild(el('div', { style: 'max-width:480px;margin-bottom:18px;' }, chartCard({
+    title: caption.replace(/^\w/, c => c.toUpperCase()) + ' by Condition',
+    type: 'doughnut',
+    labels: condKeys,
+    datasets: [{ data: condKeys.map(k => condCounts[k]), backgroundColor: condKeys.map(structConditionColor), borderWidth: 0 }]
+  })));
+
+  // ---- 3. map ----
   const mapCard = el('div', { class: 'card card-pad' }, [
     el('h3', {}, 'Locations by condition'),
     el('span', { class: 'tiny-muted' }, fmtNum(plottedCount) + ' of ' + fmtNum(rows.length) + ' ' + caption + ' plotted at their recorded coordinates, coloured by condition.'),
@@ -119,7 +127,7 @@ function buildStructureView(cfg){
     return mapInstance;
   }
 
-  // ---- 3. full register table ----
+  // ---- 4. full register table ----
   const columns = [
     { key: idKey, label: idLabel },
     ...(nameKey ? [{ key: nameKey, label: 'Name' }] : []),

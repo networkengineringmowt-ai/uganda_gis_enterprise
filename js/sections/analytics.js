@@ -1,6 +1,6 @@
 RENDERERS.analytics = async function(container){
-  const [net, ms, detail, rawNet] = await Promise.all([
-    DataStore.networkStats(), DataStore.msSummary(), DataStore.msDetail(), DataStore.network()
+  const [net, ms, detail, rawNet, density, trafficComp] = await Promise.all([
+    DataStore.networkStats(), DataStore.msSummary(), DataStore.msDetail(), DataStore.network(), DataStore.roadDensity(), DataStore.trafficComposition()
   ]);
   container.innerHTML = '';
 
@@ -10,8 +10,8 @@ RENDERERS.analytics = async function(container){
 
   container.appendChild(pageHead(
     'Analytics & Insights',
-    'The single canonical chart library for this platform — real distributions computed from the GIS road-network inventory and the FY2025/26 MoWT maintenance-strategy workbooks. Top-line KPIs live on Overview; this page goes deeper.',
-    '18 charts · 4 categories · 12 findings'
+    'The single canonical chart library for this platform — real distributions computed from the GIS road-network inventory and MoWT maintenance-strategy and planning workbooks. Top-line KPIs live on Overview; this page goes deeper.',
+    '20 charts · 4 categories · 15 findings'
   ));
 
   /* ============================================================
@@ -74,6 +74,10 @@ RENDERERS.analytics = async function(container){
   // Surface material breakdown, km (real field, not yet surfaced anywhere else on the platform)
   const surfaceEntries = Object.entries(net.bySurface).sort((a,b)=> b[1]-a[1]);
 
+  // Paved road density by subregion — a real, separate MoWT workbook (land area, not link-level),
+  // sorted densest-first. Subregions are a finer breakdown than the platform's 6 maintenance regions.
+  const densityRows = (density.by_subregion||[]).slice().sort((a,b)=> b.road_density_now_km_per_1000km2 - a.road_density_now_km_per_1000km2);
+
   // Heavy-truck share of AADT by region — real per-link fields (Aadt Heavy Trucks / Aadt 2026 Live)
   const heavySum = {}, heavyTotal = {}; REGIONS.forEach(r=>{ heavySum[r]=0; heavyTotal[r]=0; });
   feats.forEach(p=>{
@@ -90,6 +94,11 @@ RENDERERS.analytics = async function(container){
   const scoreCounts = histogram(scoreVals, scoreEdges, scoreLabels);
   const scatterPts = lip.filter(r=> r.age_years!==null && r.age_years!==undefined && r.priority_score!==null && r.priority_score!==undefined)
     .map(r=> ({x:r.age_years, y:r.priority_score}));
+
+  // National traffic composition by vehicle class, 2025 — a real, separate MoWT traffic-model
+  // workbook (per-link vehicle counts), distinct from the AADT/heavy-truck fields already on
+  // network.geojson. Sorted heaviest-first.
+  const compEntries = Object.entries(trafficComp.national_composition_veh_per_day||{}).sort((a,b)=>b[1]-a[1]);
 
   // Sealed vs unsealed by class (ms workbook)
   const nbc = CLASS_ORDER.map(c => (ms.network_by_class||[]).find(x=>x.road_class===c) || {bituminous_km:0, unsealed_km:0});
@@ -131,6 +140,11 @@ RENDERERS.analytics = async function(container){
       type:'bar', indexAxis:'y', labels: stationEntries.map(e=>e[0]), datasets:[{ data: stationEntries.map(e=>Math.round(e[1])), backgroundColor:'#00e5ff', borderRadius:3 }] }), 'network'),
     tagged(chartCard({ title:'Network Length by Surface Material',
       type:'bar', indexAxis:'y', labels: surfaceEntries.map(e=>e[0]), datasets:[{ data: surfaceEntries.map(e=>Math.round(e[1])), backgroundColor:'#00ff85', borderRadius:3 }] }), 'network'),
+    tagged(chartCard({ title:'Paved Road Density by Subregion', subtitle:'km of bituminous road per 1,000 km² land area — MoWT road density workbook, 13 subregions', tall:true,
+      type:'bar', indexAxis:'y', labels: densityRows.map(r=>r.subregion), datasets:[
+        {label:'Now', data: densityRows.map(r=>r.road_density_now_km_per_1000km2), backgroundColor:'#00e5ff', borderRadius:3},
+        {label:'At NDP3 completion', data: densityRows.map(r=>r.road_density_ndp3_end_km_per_1000km2), backgroundColor:'#9d00ff', borderRadius:3},
+      ] }), 'network'),
 
     // ---- Traffic & Safety ----
     tagged(chartCard({ title:'AADT Distribution', subtitle:fmtNum(aadtVals.length)+' of '+fmtNum(feats.length)+' links carry a live 2026 AADT figure',
@@ -146,6 +160,8 @@ RENDERERS.analytics = async function(container){
       type:'bar', labels:REGIONS, datasets:[{ data:crAvg, backgroundColor:'#ff7a00', borderRadius:6 }] }), 'traffic'),
     tagged(chartCard({ title:'Heavy-Truck Share of Traffic by Region', subtitle:'% of AADT (Aadt Heavy Trucks ÷ Aadt 2026 Live)',
       type:'bar', labels:REGIONS, datasets:[{ data:heavySharePct, backgroundColor:'#ff00c8', borderRadius:6 }] }), 'traffic'),
+    tagged(chartCard({ title:'National Traffic Composition by Vehicle Class, 2025', subtitle:trafficComp.meta.linked_count+' of '+trafficComp.meta.total_links+' links carry a modelled figure — vehicles/day, summed', tall:true,
+      type:'bar', indexAxis:'y', labels: compEntries.map(e=>e[0]), datasets:[{ data: compEntries.map(e=>Math.round(e[1])), backgroundColor:'#fff500', borderRadius:3 }] }), 'traffic'),
 
     // ---- Structures ----
     tagged(chartCard({ title:'Bridge Condition Distribution',
@@ -228,10 +244,11 @@ RENDERERS.analytics = async function(container){
   ));
 
   /* ============================================================
-     Curated findings — 10 real, computed findings distinct from
-     Overview's 6 (unsealed share, Class C share, Central vs North
+     Curated findings — 15 real, computed findings distinct from
+     Overview's 8 (unsealed share, Class C share, Central vs North
      Eastern length, 338-link programme, total asset value, VCI
-     poor+very-poor count are ALL on Overview and NOT repeated here).
+     poor+very-poor count, regional paving gap, average link length
+     are ALL on Overview and NOT repeated here).
      ============================================================ */
   const totalKm = net.totalKm;
   const since2020Km = feats.reduce((s,p)=> s + ((p['Completion Year']&&p['Completion Year']>=2020) ? (p['Length Km']||0) : 0), 0);
@@ -285,6 +302,8 @@ RENDERERS.analytics = async function(container){
     { t:`${topSurface[0]} is the dominant surface material`, d:`${fmtNum(topSurface[1],0)} km (${(topSurface[1]/totalKm*100).toFixed(0)}% of the classified network) is recorded as ${topSurface[0]} surface — the single largest of ${surfaceEntries.length} recorded materials.`, a:'var(--neon-cyan)' },
     { t:`${REGIONS[heaviestTruckRegionIdx]} carries the heaviest freight-truck share`, d:`Heavy trucks make up ${heavySharePct[heaviestTruckRegionIdx]}% of AADT on ${REGIONS[heaviestTruckRegionIdx]} region's links, the highest heavy-vehicle share of any region — a proxy for freight-corridor loading and pavement-fatigue risk.`, a:'var(--neon-green)' },
     { t:`Mean condition-rating confidence is ${avgConfidence.toFixed(0)}%`, d:`Across ${fmtNum(confVals.length)} field-surveyed links, ${fmtNum(lowConfCount)} (${(lowConfCount/confVals.length*100).toFixed(0)}%) carry a recorded condition confidence below 70% — flagged here rather than treated as equally certain as the rest.`, a:'var(--neon-pink)' },
+    { t:`${densityRows[0].subregion} has the densest paved network, ${densityRows[densityRows.length-1].subregion} the sparsest`, d:`${densityRows[0].subregion} carries ${densityRows[0].road_density_now_km_per_1000km2} km of paved road per 1,000 km² of land area, against ${densityRows[densityRows.length-1].road_density_now_km_per_1000km2} km in ${densityRows[densityRows.length-1].subregion} — a ${(densityRows[0].road_density_now_km_per_1000km2/densityRows[densityRows.length-1].road_density_now_km_per_1000km2).toFixed(1)}× gap, from the MoWT road density workbook.`, a:'var(--neon-yellow)' },
+    { t:`Motorcycles are the single largest vehicle class on the network`, d:`Motorcycles & scooters account for ${(compEntries[0][1]/trafficComp.meta.total_motorised_veh_per_day*100).toFixed(0)}% of modelled 2025 motorised traffic (${fmtNum(compEntries[0][1],0)} of ${fmtNum(trafficComp.meta.total_motorised_veh_per_day,0)} vehicles/day) — more than double the next-largest class, from the MoWT national traffic model.`, a:'var(--neon-blue)' },
   ];
   const findGrid = el('div',{class:'grid-3'});
   findings.forEach(f=>{
@@ -292,7 +311,7 @@ RENDERERS.analytics = async function(container){
       el('h3',{}, f.t), el('p',{class:'muted', style:'margin-top:6px;'}, f.d)
     ]));
   });
-  container.appendChild(sectionBlock('What the deeper data shows', 'Twelve additional findings, computed live from this page’s data — distinct from the Overview summary.', findGrid));
+  container.appendChild(sectionBlock('What the deeper data shows', 'Fifteen additional findings, computed live from this page’s data — distinct from the Overview summary.', findGrid));
 
   container.appendChild(el('p',{class:'footnote'},
     net.source + ' Maintenance-strategy figures are drawn from the MoWT FY2025/26 maintenance-strategy workbooks. Where the two source systems describe similar-sounding totals differently, each figure keeps its own source rather than being merged into one number — see the Overview footnote for detail.'
