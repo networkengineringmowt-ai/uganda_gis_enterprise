@@ -4,15 +4,35 @@
 // DataStore, never from this file — this module only owns the 3D staging.
 
 const SolarSystem = (() => {
+  // feeds/receives: the bi-directional interlink narrative each subsystem exchanges with the RMS
+  // Sun Core, as reported by DNR-MOWT engineering staff. Kept separate from the live-computed
+  // metrics rendered in js/sections/universe.js — those come straight from DataStore; these are
+  // stated subsystem context, not this platform's own live KPIs.
   const PLANETS = [
-    { id:'pms',    name:'PMS',      full:'Pavement Management System',        body:'Mercury', color:0xFFB300, orbit:9.0,  size:0.62, speed:0.62, gravity:0.34, moon:null },
-    { id:'tis',    name:'TIS',      full:'Traffic Information System',        body:'Venus',   color:0x00E5FF, orbit:12.5, size:0.95, speed:0.46, gravity:0.44, moon:null },
-    { id:'bms',    name:'BMS',      full:'Bridge Management System',          body:'Terra',   color:0x00E676, orbit:16.0, size:1.00, speed:0.40, gravity:0.55, moon:{ name:'Moon',    size:0.27, dist:1.7, color:0xCFD8DC } },
-    { id:'socio',  name:'NDP IV',   full:'Socio-Economic & NDP IV',           body:'Mars',    color:0xFF6D00, orbit:19.5, size:0.72, speed:0.33, gravity:0.30, moon:null },
-    { id:'budget', name:'Budgets',  full:'Budgets & LCCA',                    body:'Jupiter', color:0xFFD700, orbit:25.0, size:1.90, speed:0.22, gravity:0.72, moon:{ name:'Europa',  size:0.32, dist:2.6, color:0xE8D9B5 } },
-    { id:'lidar',  name:'LiDAR',    full:'Geospatial LiDAR & Remote Sensing', body:'Saturn',  color:0xD500F9, orbit:31.0, size:1.70, speed:0.17, gravity:0.65, moon:{ name:'Titan',   size:0.38, dist:2.8, color:0xE0A85C }, ring:true },
-    { id:'piarc',  name:'PIARC',    full:'Global Benchmarks & PIARC',         body:'Uranus',  color:0x1DE9B6, orbit:36.0, size:1.40, speed:0.13, gravity:0.48, moon:{ name:'Titania', size:0.24, dist:2.3, color:0xB9C6D6 } },
-    { id:'pims',   name:'PIMS',     full:'PIMS Projects & Public Investment', body:'Neptune', color:0x2979FF, orbit:41.0, size:1.35, speed:0.10, gravity:0.60, moon:{ name:'Triton',  size:0.26, dist:2.2, color:0x9FD8E0 } },
+    { id:'pms',    name:'PMS',      full:'Pavement Management System',        body:'Mercury', color:0xFFB300, orbit:9.0,  size:0.62, speed:0.62, gravity:0.34, moon:null,
+      feeds: 'PyTorch CNN defect model (99.85% accuracy across 15.12M survey images), PCI 86.2, IRI 2.71 m/km',
+      receives: 'Master link-node LRS chainages & WGS84 coordinates' },
+    { id:'tis',    name:'TIS',      full:'Traffic Information System',        body:'Venus',   color:0x00E5FF, orbit:12.5, size:0.95, speed:0.46, gravity:0.44, moon:null,
+      feeds: 'Automated Traffic Counter (ATC) counts, axle load spectra, 8 WIM weighbridges (99.1% compliance)',
+      receives: 'Heavy vehicle corridor load limits' },
+    { id:'bms',    name:'BMS',      full:'Bridge Management System',          body:'Terra',   color:0x00E676, orbit:16.0, size:1.00, speed:0.40, gravity:0.55, moon:{ name:'Moon',    size:0.27, dist:1.7, color:0xCFD8DC },
+      feeds: '450 inspected bridges & major culverts, 96.2% structural safety index (New Jinja 9.2/10)',
+      receives: 'River crossing LRS chainage positions' },
+    { id:'socio',  name:'NDP IV',   full:'Socio-Economic & NDP IV',           body:'Mars',    color:0xFF6D00, orbit:19.5, size:0.72, speed:0.33, gravity:0.30, moon:null,
+      feeds: '135-district feeder network (15,000 km), 18.4% EIRR, agricultural trade corridor access',
+      receives: 'National network connectivity topology' },
+    { id:'budget', name:'Budgets',  full:'Budgets & LCCA',                    body:'Jupiter', color:0xFFD700, orbit:25.0, size:1.90, speed:0.22, gravity:0.72, moon:{ name:'Europa',  size:0.32, dist:2.6, color:0xE8D9B5 },
+      feeds: 'Condition-adjusted replacement asset valuation, MYFP 5-tier maintenance triggers',
+      receives: 'Long-term pavement condition decay trajectories' },
+    { id:'lidar',  name:'LiDAR',    full:'Geospatial LiDAR & Remote Sensing', body:'Saturn',  color:0xD500F9, orbit:31.0, size:1.70, speed:0.17, gravity:0.65, moon:{ name:'Titan',   size:0.38, dist:2.8, color:0xE0A85C }, ring:true,
+      feeds: '4,800 km² drone LiDAR (0.05 m DEM point clouds), InSAR radar surface subsidence (0.12 mm/yr)',
+      receives: '60 m road reserve cadastral boundaries' },
+    { id:'piarc',  name:'PIARC',    full:'Global Benchmarks & PIARC',         body:'Uranus',  color:0x1DE9B6, orbit:36.0, size:1.40, speed:0.13, gravity:0.48, moon:{ name:'Titania', size:0.24, dist:2.3, color:0xB9C6D6 },
+      feeds: 'PIARC World Road Association standards, World Bank RMI metrics, AASHTO guidelines, climate-resilient specs (NZ, UK, South Africa, Japan)',
+      receives: 'DNR-MOWT national performance data for global cross-benchmarking' },
+    { id:'pims',   name:'PIMS',     full:'PIMS Projects & Public Investment', body:'Neptune', color:0x2979FF, orbit:41.0, size:1.35, speed:0.10, gravity:0.60, moon:{ name:'Triton',  size:0.26, dist:2.2, color:0x9FD8E0 },
+      feeds: 'NDP IV capital project pipeline, PIMS gatekeeper clearance, donor-funded corridors (World Bank, AfDB, JICA)',
+      receives: 'Priority MYFP capital interventions & condition-adjusted asset replacement values' },
   ];
 
   const SUN_COLOR = 0xFFFFFF;

@@ -137,6 +137,13 @@ function renderMetricsFor(planet, metrics) {
     box.appendChild(el('p', { class: 'muted' }, 'Live data unavailable right now.'));
     return box;
   }
+  const flow = el('div', { class: 'universe-metric-rows', style: 'margin-bottom:10px;' }, [
+    el('div', { class: 'universe-metric-row' }, [el('span', { class: 'muted' }, 'Feeds Sun Core'), el('span', {}, planet.feeds || '—')]),
+    el('div', { class: 'universe-metric-row' }, [el('span', { class: 'muted' }, 'Receives from Sun Core'), el('span', {}, planet.receives || '—')]),
+  ]);
+  box.appendChild(flow);
+  box.appendChild(el('p', { class: 'muted', style: 'margin:0 0 6px;font-size:12px;' }, 'Data flow as reported by DNR-MOWT engineering staff. Live platform metrics below.'));
+
   const rows = el('div', { class: 'universe-metric-rows' });
   switch (planet.id) {
     case 'pms': {
