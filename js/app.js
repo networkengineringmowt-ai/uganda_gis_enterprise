@@ -21,6 +21,9 @@ const NAV = [
     { id:'analytics', label:'Analytics & Insights', icon:'▲' },
     { id:'reports', label:'Executive Reports', icon:'▥' },
   ]},
+  { group:'3D View', items:[
+    { id:'universe', label:'3D Network Universe', icon:'☉' },
+  ]},
   { group:'Links', items:[
     { id:'links', label:'Live Links', icon:'🔗' },
   ]},
