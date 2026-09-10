@@ -65,30 +65,4 @@ RENDERERS.overview = async function(container){
   container.appendChild(el('p',{class:'footnote'},
     'Two independent, real MoWT source systems feed this platform: the GIS road-network inventory (network.geojson, '+net.linkCount+' links, '+fmtNum(net.totalKm,0)+' km) and the separately-maintained maintenance-strategy planning workbooks ('+fmtNum(ms.kpi_summary.total_network_km,0)+' km assessed, 2026 cycle). Their totals differ slightly because they are captured at different times from different systems — each figure on this site is labelled with its own source rather than forced to a single, falsely-precise number.'
   ));
-
-  // ---- Live verification & enterprise links (kept as two distinct sections — this
-  // portal is not a "bot result" and should not be mixed into that grid) ----
-  function linkCardGrid(items){
-    const grid = el('div',{style:'display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;'});
-    items.forEach(l=>{
-      grid.appendChild(el('a',{href:l.url, target:'_blank', rel:'noopener noreferrer', class:'card card-pad hoverable', style:`display:block;border-left:4px solid ${l.a};text-decoration:none;color:inherit;`},[
-        el('h3',{}, l.icon+'  '+l.label),
-        el('p',{class:'muted', style:'margin-top:6px;'}, l.desc),
-        el('p',{class:'footnote', style:'margin-top:10px;word-break:break-all;'}, l.url),
-      ]));
-    });
-    return grid;
-  }
-
-  const enterpriseLinks = [
-    { icon:'🛰️', label:'Uganda GIS Enterprise Portal', desc:'This platform — live national road-network GIS, maintenance analytics and investment dashboards.', url:'https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/', a:'var(--neon-cyan)' },
-  ];
-  container.appendChild(sectionBlock('🚀 Live Verification & Enterprise Links', 'Live, publicly deployed MoWT enterprise systems.', linkCardGrid(enterpriseLinks)));
-
-  const botResultLinks = [
-    { icon:'⚙️', label:'Result Engine Dashboard', desc:'Automated results-tracking dashboard.', url:'https://priscananjehe1996.github.io/priezent/result_engine.html', a:'var(--neon-blue)' },
-    { icon:'☀️', label:'3D Solar Agent App', desc:'Interactive 3D solar agent application.', url:'https://priscananjehe1996.github.io/priezent/', a:'var(--neon-orange)' },
-    { icon:'📡', label:'Mindscape Telemetry', desc:'Telemetry and monitoring interface.', url:'https://priscananjehe1996.github.io/priezent/prisca_mindscape.html', a:'var(--neon-magenta)' },
-  ];
-  container.appendChild(sectionBlock('🤖 Bot Results', 'Live, publicly deployed automation projects — opens in a new tab.', linkCardGrid(botResultLinks)));
 };
