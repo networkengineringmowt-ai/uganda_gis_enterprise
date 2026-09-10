@@ -1,6 +1,6 @@
 RENDERERS.analytics = async function(container){
-  const [net, ms, detail, rawNet, density, trafficComp] = await Promise.all([
-    DataStore.networkStats(), DataStore.msSummary(), DataStore.msDetail(), DataStore.network(), DataStore.roadDensity(), DataStore.trafficComposition()
+  const [net, ms, detail, rawNet, density, trafficComp, wbCoverage] = await Promise.all([
+    DataStore.networkStats(), DataStore.msSummary(), DataStore.msDetail(), DataStore.network(), DataStore.roadDensity(), DataStore.trafficComposition(), DataStore.weighbridgeDistrictCoverage()
   ]);
   container.innerHTML = '';
 
@@ -11,7 +11,7 @@ RENDERERS.analytics = async function(container){
   container.appendChild(pageHead(
     'Analytics & Insights',
     'The single canonical chart library for this platform — real distributions computed from the GIS road-network inventory and MoWT maintenance-strategy and planning workbooks. Top-line KPIs live on Overview; this page goes deeper.',
-    '20 charts · 4 categories · 15 findings'
+    '22 charts · 4 categories · 17 findings'
   ));
 
   /* ============================================================
@@ -99,6 +99,21 @@ RENDERERS.analytics = async function(container){
   // workbook (per-link vehicle counts), distinct from the AADT/heavy-truck fields already on
   // network.geojson. Sorted heaviest-first.
   const compEntries = Object.entries(trafficComp.national_composition_veh_per_day||{}).sort((a,b)=>b[1]-a[1]);
+
+  // Network-wide Intervention Priority Band (this site's own composite: 40% condition +
+  // 35% traffic percentile + 25% safety risk, on network.geojson's own 1,015 links) —
+  // distinct scope from the 338-link paved 5-year backlog "Priority Score" charts above.
+  const PRIORITY_BANDS = ['Low','Moderate','High','Critical'];
+  const priorityBandCounts = {Low:0, Moderate:0, High:0, Critical:0};
+  let priorityScored = 0, priorityUnscored = 0;
+  feats.forEach(p=>{
+    const b = p['Intervention Priority Band'];
+    if(b && priorityBandCounts[b]!==undefined){ priorityBandCounts[b]++; priorityScored++; }
+    else priorityUnscored++;
+  });
+
+  // Weighbridge district-coverage register — separate real MoWT dataset (see data.js note)
+  const wbRows = (wbCoverage.by_weighbridge||[]).slice();
 
   // Sealed vs unsealed by class (ms workbook)
   const nbc = CLASS_ORDER.map(c => (ms.network_by_class||[]).find(x=>x.road_class===c) || {bituminous_km:0, unsealed_km:0});
@@ -188,6 +203,10 @@ RENDERERS.analytics = async function(container){
       type:'bar', labels: fyRows.map(y=>y.financial_year), datasets:[{ data: fyRows.map(y=>Math.round(y.funding_gap_vs_baseline_bn_ushs||0)), backgroundColor:'#ff2d78', borderRadius:6 }] }), 'investment'),
     tagged(chartCard({ title:'Link Age vs Priority Score', type:'scatter',
       labels: null, datasets:[{ label:'Links', data:scatterPts, backgroundColor:'#9d00ff' }] }), 'investment'),
+    tagged(chartCard({ title:'Network-Wide Intervention Priority', subtitle:priorityScored+' of '+feats.length+' links scored — this site’s own composite (40% condition, 35% traffic, 25% safety risk), distinct from the 338-link paved backlog score above',
+      type:'doughnut', labels:PRIORITY_BANDS, datasets:[{ data:PRIORITY_BANDS.map(b=>priorityBandCounts[b]), backgroundColor:['#00c853','#fff500','#ff7a00','#ff2d78'], borderWidth:0 }] }), 'investment'),
+    tagged(chartCard({ title:'Weighbridge District Coverage', subtitle:'Districts assigned per enforcement station — separate MoWT register, see Network Explorer footnote',
+      type:'bar', indexAxis:'y', labels: wbRows.map(r=>r.weighbridge), datasets:[{ data: wbRows.map(r=>r.district_count), backgroundColor:'#00e5ff', borderRadius:4 }] }), 'traffic'),
   ];
 
   const CATS = [
@@ -304,6 +323,8 @@ RENDERERS.analytics = async function(container){
     { t:`Mean condition-rating confidence is ${avgConfidence.toFixed(0)}%`, d:`Across ${fmtNum(confVals.length)} field-surveyed links, ${fmtNum(lowConfCount)} (${(lowConfCount/confVals.length*100).toFixed(0)}%) carry a recorded condition confidence below 70% — flagged here rather than treated as equally certain as the rest.`, a:'var(--neon-pink)' },
     { t:`${densityRows[0].subregion} has the densest paved network, ${densityRows[densityRows.length-1].subregion} the sparsest`, d:`${densityRows[0].subregion} carries ${densityRows[0].road_density_now_km_per_1000km2} km of paved road per 1,000 km² of land area, against ${densityRows[densityRows.length-1].road_density_now_km_per_1000km2} km in ${densityRows[densityRows.length-1].subregion} — a ${(densityRows[0].road_density_now_km_per_1000km2/densityRows[densityRows.length-1].road_density_now_km_per_1000km2).toFixed(1)}× gap, from the MoWT road density workbook.`, a:'var(--neon-yellow)' },
     { t:`Motorcycles are the single largest vehicle class on the network`, d:`Motorcycles & scooters account for ${(compEntries[0][1]/trafficComp.meta.total_motorised_veh_per_day*100).toFixed(0)}% of modelled 2025 motorised traffic (${fmtNum(compEntries[0][1],0)} of ${fmtNum(trafficComp.meta.total_motorised_veh_per_day,0)} vehicles/day) — more than double the next-largest class, from the MoWT national traffic model.`, a:'var(--neon-blue)' },
+    { t:`${fmtNum(priorityBandCounts.Critical)} links fall in the network-wide Critical priority band`, d:`Scoring all ${fmtNum(priorityScored)} of ${fmtNum(feats.length)} classified links on condition, traffic loading and safety risk together, ${fmtNum(priorityBandCounts.Critical)} land in the top (Critical) quartile for intervention priority — see Network Explorer for the full per-link register.`, a:'var(--neon-pink)' },
+    { t:`${wbRows[0].weighbridge} weighbridge has the widest district catchment`, d:`${wbRows[0].weighbridge} station is assigned ${fmtNum(wbRows[0].district_count)} districts in the MoWT weighbridge coverage register, the widest catchment of the ${fmtNum(wbRows.length)} stations with a defined coverage area.`, a:'var(--neon-cyan)' },
   ];
   const findGrid = el('div',{class:'grid-3'});
   findings.forEach(f=>{
@@ -311,7 +332,7 @@ RENDERERS.analytics = async function(container){
       el('h3',{}, f.t), el('p',{class:'muted', style:'margin-top:6px;'}, f.d)
     ]));
   });
-  container.appendChild(sectionBlock('What the deeper data shows', 'Fifteen additional findings, computed live from this page’s data — distinct from the Overview summary.', findGrid));
+  container.appendChild(sectionBlock('What the deeper data shows', 'Seventeen additional findings, computed live from this page’s data — distinct from the Overview summary.', findGrid));
 
   container.appendChild(el('p',{class:'footnote'},
     net.source + ' Maintenance-strategy figures are drawn from the MoWT FY2025/26 maintenance-strategy workbooks. Where the two source systems describe similar-sounding totals differently, each figure keeps its own source rather than being merged into one number — see the Overview footnote for detail.'

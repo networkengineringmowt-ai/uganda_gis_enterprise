@@ -66,7 +66,7 @@ RENDERERS.network = async function(container){
   ));
 
   container.appendChild(el('p',{class:'footnote'},
-    'National Road Network: computed live from the platform’s GIS road-network inventory (' + net.features.length + ' links). DUCAR District Network: the platform’s district, urban and community-access roads inventory (DDUCAR/DNR, MoWT), fetched live. Raw source-file identifiers and link codes are never shown — records are identified by their real road/link names.'
+    'National Road Network: computed live from the platform’s GIS road-network inventory (' + net.features.length + ' links). DUCAR District Network: the platform’s district, urban and community-access roads inventory (DDUCAR/DNR, MoWT), fetched live. Raw source-file identifiers and link codes are never shown — records are identified by their real road/link names. Priority Score: a transparent weighted composite (40% pavement condition, 35% traffic loading percentile, 25% safety risk band) computed live from this table’s own real fields — renormalized when a link is missing one input, and banded into Low/Moderate/High/Critical by this network’s own quartiles, not fixed cutoffs. 6 links with no Condition, AADT or Risk Band on record are left unscored rather than defaulted.'
   ));
 };
 
@@ -90,6 +90,8 @@ function buildNationalTable(features){
       crashRate: p['Crash Rate (per 100m-veh-km)'],
       completionYear: p['Completion Year'],
       station: p['Maintena 2'],
+      priorityScore: p['Intervention Priority Score'],
+      priorityBand: p['Intervention Priority Band'],
     };
   });
 
@@ -101,6 +103,7 @@ function buildNationalTable(features){
     filters: [
       { label:'Regions', key:'region', options: DataStore.REGIONS },
       { label:'Classes', key:'cls', options: ['A','B','C','M'].map(c=>DataStore.CLASS_LABELS[c]) },
+      { label:'Priority', key:'priorityBand', options: ['Low','Moderate','High','Critical'] },
     ],
     columns: [
       { key:'name', label:'Link Name' },
@@ -118,6 +121,8 @@ function buildNationalTable(features){
       { key:'crashRate', label:'Crash Rate', align:'num', fmt:v=>fmtNum(v,1) },
       { key:'completionYear', label:'Completion Year', align:'num', fmt:v=>v==null?'—':String(v) },
       { key:'station', label:'Maintenance Station' },
+      { key:'priorityScore', label:'Priority Score', align:'num', fmt:v=>v==null?'—':fmtNum(v,1) },
+      { key:'priorityBand', label:'Priority Band', render:v=>priorityBadge(v) },
     ],
   });
 }
