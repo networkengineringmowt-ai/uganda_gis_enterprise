@@ -74,6 +74,14 @@ function conditionBadge(cond){
   return el('span',{class:'badge '+cls}, cond);
 }
 
+/* ---------------- intervention-priority badge (Low/Moderate/High/Critical quartile band —
+   a distinct scale from the pavement-condition badge above, never conflate the two) ---------------- */
+function priorityBadge(band){
+  if(!band) return el('span',{class:'badge badge-neutral'}, 'Not scored');
+  const cls = { Low:'badge-good', Moderate:'badge-fair', High:'badge-poor', Critical:'badge-critical' }[band] || 'badge-neutral';
+  return el('span',{class:'badge '+cls}, band);
+}
+
 /* ---------------- Data table: sortable, searchable, paginated ---------------- */
 function dataTable(opts){
   // opts: {columns:[{key,label,align,fmt,sortable}], rows:[obj], pageSize, searchKeys, filters:[{label,key,options}], caption}
