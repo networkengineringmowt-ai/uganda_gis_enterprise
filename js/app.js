@@ -21,6 +21,9 @@ const NAV = [
     { id:'analytics', label:'Analytics & Insights', icon:'▲' },
     { id:'reports', label:'Executive Reports', icon:'▥' },
   ]},
+  { group:'Links', items:[
+    { id:'links', label:'Live Links', icon:'🔗' },
+  ]},
 ];
 
 function buildSidebar(activeId, onNavigate){
