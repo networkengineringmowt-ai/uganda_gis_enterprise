@@ -27,6 +27,54 @@ function el(tag, attrs={}, children=[]){
   return node;
 }
 
+/* ---------------- searchable select (standing platform rule: every dropdown
+   is a search box, not a plain native <select> — restored after the light
+   rebuild reverted table filters to plain selects) ---------------- */
+function searchableSelect(opts){
+  // opts: {label, options:[string], onChange(value)}
+  const wrap = el('div',{class:'search-select'});
+  const input = document.createElement('input');
+  input.className = 'search-select-input';
+  input.placeholder = 'All '+opts.label;
+  input.setAttribute('aria-label', opts.label+' filter');
+  wrap.appendChild(input);
+  const panel = el('div',{class:'search-select-panel'});
+  panel.style.display = 'none';
+  wrap.appendChild(panel);
+
+  function optionsFor(q){
+    const items = ['All '+opts.label, ...opts.options];
+    if(!q) return items;
+    const ql = q.toLowerCase();
+    return items.filter(o => o.toLowerCase().includes(ql));
+  }
+  function openPanel(){
+    const items = optionsFor(input.value);
+    panel.innerHTML = '';
+    if(!items.length){
+      panel.appendChild(el('div',{class:'search-select-empty'}, 'No matches'));
+    } else {
+      items.forEach(o=>{
+        const isAll = o==='All '+opts.label;
+        const row = el('div',{class:'search-select-opt'}, o);
+        row.addEventListener('mousedown', e=>{
+          e.preventDefault();
+          input.value = isAll ? '' : o;
+          panel.style.display = 'none';
+          opts.onChange(isAll ? 'All' : o);
+        });
+        panel.appendChild(row);
+      });
+    }
+    panel.style.display = 'block';
+  }
+  input.addEventListener('focus', openPanel);
+  input.addEventListener('input', openPanel);
+  input.addEventListener('blur', ()=> setTimeout(()=>{ panel.style.display='none'; }, 150));
+  input.addEventListener('keydown', e=>{ if(e.key==='Escape'){ panel.style.display='none'; input.blur(); } });
+  return wrap;
+}
+
 /* ---------------- KPI tiles ---------------- */
 const REDUCE_MOTION = typeof window!=='undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -97,11 +145,8 @@ function dataTable(opts){
   const filterState = {};
   (opts.filters||[]).forEach(f=>{
     filterState[f.key] = 'All';
-    const chip = el('select',{class:'select-chip'});
-    chip.appendChild(el('option',{value:'All'},'All '+f.label));
-    f.options.forEach(o=> chip.appendChild(el('option',{value:o}, o)));
-    chip.addEventListener('change', ()=>{ filterState[f.key]=chip.value; state.page=0; render(); });
-    toolbar.appendChild(chip);
+    const combo = searchableSelect({ label: f.label, options: f.options, onChange:(val)=>{ filterState[f.key]=val; state.page=0; render(); } });
+    toolbar.appendChild(combo);
   });
 
   const countLabel = el('span',{class:'table-count'});
