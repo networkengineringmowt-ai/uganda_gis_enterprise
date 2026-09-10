@@ -244,6 +244,23 @@ button{ font-family:inherit; }
   border:1px solid var(--border); background:var(--bg-elevated); border-radius:999px;
   padding:7px 13px; font-size:.8rem; font-weight:600; color:var(--text-secondary); cursor:pointer;
 }
+/* Searchable-select combobox: standing rule is every dropdown is a search box,
+   not a plain native <select>. */
+.search-select{ position:relative; min-width:150px; }
+.search-select-input{
+  width:100%; border:1px solid var(--border); background:var(--bg-elevated); border-radius:999px;
+  padding:7px 13px; font-size:.8rem; font-weight:600; color:var(--text-secondary); font-family:inherit;
+  cursor:text; outline:none;
+}
+.search-select-input:focus{ border-color:var(--neon-cyan); color:var(--text-primary); }
+.search-select-panel{
+  position:absolute; top:calc(100% + 4px); left:0; min-width:100%; max-width:280px; max-height:240px;
+  overflow-y:auto; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-sm);
+  box-shadow:var(--shadow-md); z-index:40;
+}
+.search-select-opt{ padding:8px 13px; font-size:.8rem; color:var(--text-secondary); cursor:pointer; white-space:nowrap; }
+.search-select-opt:hover{ background:var(--bg-subtle); color:var(--text-primary); }
+.search-select-empty{ padding:8px 13px; font-size:.8rem; color:var(--text-tertiary); }
 .table-count{ font-size:.78rem; color:var(--text-tertiary); margin-left:auto; }
 
 .table-wrap{
