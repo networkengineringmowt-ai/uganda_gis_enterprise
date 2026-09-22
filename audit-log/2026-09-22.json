@@ -1,0 +1,26 @@
+{
+  "date": "2026-09-22",
+  "repo": "uganda_gis_enterprise",
+  "url": "https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/",
+  "technical": {
+    "httpStatus": 200,
+    "loadFailed": false,
+    "pageRendered": false,
+    "bodyTextLength": 0,
+    "consoleErrors": [
+      "ReferenceError: useSupabaseData is not defined\n    at GK (https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/assets/index-CqcGdnFT.js:102:85842)\n    at kv (https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/assets/index-CqcGdnFT.js:38:17062)\n    at zM (https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/assets/index-CqcGdnFT.js:40:44058)\n    at IM (https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/assets/index-CqcGdnFT.js:40:39790)\n    at eB (https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/assets/index-CqcGdnFT.js:40:39718)\n    at kg (https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/assets/index-CqcGdnFT.js:40:39570)\n    at A_ (https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/assets/index-CqcGdnFT.js:40:35934)\n    at DM (https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/assets/index-CqcGdnFT.js:40:34883)\n    at z (https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/assets/index-CqcGdnFT.js:25:1602)\n    at MessagePort.gt (https://networkengineringmowt-ai.github.io/uganda_gis_enterprise/assets/index-CqcGdnFT.js:25:1977)",
+      "ReferenceError: useSupabaseData is not defined"
+    ],
+    "brokenImages": [],
+    "hashLinksFound": [],
+    "chartElementCount": 0
+  },
+  "accuracy": {
+    "extractedFigures": [],
+    "discrepancies": []
+  },
+  "consistency": {
+    "districtList": null,
+    "notes": []
+  }
+}
