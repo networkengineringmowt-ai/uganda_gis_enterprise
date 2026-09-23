@@ -36,6 +36,7 @@ const DataStore = (() => {
   async function airports(){ return getJSON('geo/airports.geojson'); }
   async function ferryCrossings(){ return getJSON('geo/ferry_crossings.geojson'); }
   async function kampalaIncidents(){ return getJSON('geo/kampala_traffic_incidents.geojson'); }
+  async function fieldVerification(){ return getJSON('geo/field_verification.geojson'); }
   async function roadDensity(){ return getJSON('road_density_by_subregion.json'); }
   async function trafficComposition(){ return getJSON('traffic_composition_2025.json'); }
   async function weighbridgeDistrictCoverage(){ return getJSON('weighbridge_district_coverage.json'); }
@@ -91,7 +92,7 @@ const DataStore = (() => {
     getJSON, network, bridgesGeo, culvertsGeo, ducarRoads, ducarConditionSummary, maintRegions,
     msSummary, msDetail, ibpProjects, protectedAreas, forestReserves, wetlands, gazettedAreas,
     weighbridges, trafficStations, oprcContracts, ndpivProjects, towns, districts, airports,
-    ferryCrossings, kampalaIncidents, roadDensity, trafficComposition, weighbridgeDistrictCoverage, networkStats, linkNameMap, decodeLinkId,
+    ferryCrossings, kampalaIncidents, fieldVerification, roadDensity, trafficComposition, weighbridgeDistrictCoverage, networkStats, linkNameMap, decodeLinkId,
     REGIONS, CLASS_LABELS
   };
 })();
