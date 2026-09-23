@@ -10,8 +10,8 @@ RENDERERS.map = async function(container){
 
   container.appendChild(pageHead(
     'National GIS Map',
-    'Uganda’s classified road network on a live basemap, with 21 toggleable reference layers fetched directly from the platform’s GIS file store.',
-    '21 reference layers'
+    'Uganda’s classified road network on a live basemap, with 22 toggleable reference layers fetched directly from the platform’s GIS file store.',
+    '22 reference layers'
   ));
 
   // ---------------------------------------------------------------- layout
@@ -190,6 +190,7 @@ RENDERERS.map = async function(container){
     { id:'traffic_stations', label:'Traffic Count Stations', unit:'stations', loader: DataStore.trafficStations, color:NEON[1], type:'point', radius:4, popup:'generic' },
     { id:'kampala_incidents', label:'Kampala Traffic Incidents', unit:'incidents', loader: DataStore.kampalaIncidents, color:NEON[2], type:'point', radius:3, popup:'generic' },
     { id:'ducar_condition', label:'DUCAR District Condition Summary', unit:'districts', loader: DataStore.ducarConditionSummary, color:NEON[3], type:'polygon', popup:'generic' },
+    { id:'field_verification', label:'Field Verification Points', unit:'site visits', loader: DataStore.fieldVerification, color:NEON[4], type:'point', radius:6, popup:'generic' },
   ];
 
   const GROUPS = [
@@ -197,7 +198,7 @@ RENDERERS.map = async function(container){
     { title:'Investment & Contracts', ids:['oprc','ndpiv'] },
     { title:'Boundaries & Places', ids:['districts','maint_regions','parishes','towns'] },
     { title:'Land & Environment', ids:['protected_areas','forest_reserves','wetlands','gazetted'] },
-    { title:'Monitoring & Facilities', ids:['airports','ferry','traffic_stations','kampala_incidents','ducar_condition'] },
+    { title:'Monitoring & Facilities', ids:['airports','ferry','traffic_stations','kampala_incidents','ducar_condition','field_verification'] },
   ];
 
   // link_id -> real link name (used by network/bridge/culvert popups and any
